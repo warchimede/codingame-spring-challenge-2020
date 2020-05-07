@@ -77,15 +77,20 @@ loop do
       $px = -1
       $py = -1
 
+      # Selection
+      selected = $pellets[0]
+
       high_val = $pellets.select { |p| p["v"] > 1 }
-      prand = nil
       if high_val.empty?
-        prand = $pellets.sample
+        selected = $pellets.sample
       else
-        prand = high_val[0]
+        if $x > width/2
+          high_val = high_val.reverse
+        end
+        selected = high_val[0]
       end
-      $px = prand["x"]
-      $py = prand["y"]
+      $px = selected["x"]
+      $py = selected["y"]
     end
     
     puts "MOVE #{$pac_id} #{$px} #{$py}"
