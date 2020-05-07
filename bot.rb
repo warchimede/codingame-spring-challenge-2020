@@ -9,12 +9,13 @@ height.times do
 end
 
 #######################
-$pac_id = 0
-$x = 0
-$y = 0
-$px = 0
-$py = 0
 $done = true
+$pac_id = -1
+$x = -1
+$y = -1
+$px = -1
+$py = -1
+$pellets = []
 #######################
 
 # game loop
@@ -38,24 +39,26 @@ loop do
         ability_cooldown = ability_cooldown.to_i
 
         ############################################################
-        if mine do
+        if mine
           $pac_id = pac_id
           $x = x
           $y = y
         end
         ############################################################
     end
+
+    ######################
+    $pellets = []
+    ######################
+
     visible_pellet_count = gets.to_i # all pellets in sight
     visible_pellet_count.times do
         # value: amount of points this pellet is worth
         x, y, value = gets.split(" ").collect {|x| x.to_i}
 
         ############################################################
-        if value > 1 and $done do
-          $done = false
-          $px = x
-          $py = y
-          break
+        if value > 0
+          $pellets << { "x" => x, "y" => y, "v" => value }
         end
         ############################################################
     end
@@ -65,12 +68,25 @@ loop do
     
     # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
     ############################################################
-    $done = $x == $px and $y == $py 
+    if $x == $px and $y == $py 
+      $done = true
+    end
+
+    if $done
+      $px = -1
+      $py = -1
+
+      high_val = $pellets.select { |p| p["v"] > 1 }
+      if high_val.empty?
+        prand = $pellets.sample
+        $px = prand["x"]
+        $py = prand["y"]
+      else
+        $px = high_val[0]["x"]
+        $py = high_val[0]["y"]
+      end
+    end
+    
     puts "MOVE #{$pac_id} #{$px} #{$py}"
     ############################################################
 end
-
-############################################################
-
-
-
