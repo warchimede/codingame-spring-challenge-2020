@@ -87,7 +87,11 @@ loop do
           {'x' => pos['x']+1, 'y' => pos['y'] },
           {'x' => pos['x'], 'y' => pos['y']+1 },
           {'x' => pos['x']-1, 'y' => pos['y'] }
-        ].select { |p| $Map['y']['x'] == ' ' }
+        ].select { |p| 
+          y = p['y']
+          x = p['x']
+          $Map[y][x] == ' '
+        }
         dest = possible_pos.sample
 
         # In case of pellets
