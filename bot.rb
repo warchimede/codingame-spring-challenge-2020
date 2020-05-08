@@ -12,9 +12,6 @@ end
 
 #######################
 $Map = map
-
-STDERR.puts $Map
-
 $pacs = {}
 $pellets = []
 #######################
@@ -41,7 +38,7 @@ loop do
 
         ############################################################
         if mine
-          if $pacs.empty?
+          if $pacs[pac_id].nil?
             $pacs[pac_id] = {
               'x' => x,
               'y' => y,
@@ -96,7 +93,7 @@ loop do
     # Generate action
     action = []
     $pacs.each do |pac_id, pos|
-      action << "MOVE #{$pac_id} #{$pos['dest_x']} #{$pos['dest_y']}"
+      action << "MOVE #{pac_id} #{pos['dest_x']} #{pos['dest_y']}"
     end
     puts action.join('|')
     ############################################################
