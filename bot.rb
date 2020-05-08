@@ -102,15 +102,15 @@ loop do
         }
         # filter last position when possible
         if possible_pos.length > 1
-          possible_pos.select { |p|
+          possible_pos = possible_pos.select { |p|
             p['x'] != pos['last_x'] and p['y'] != pos['last_y']
           }
         end
-        dest = possible_pos.sample
+        dest = possible_pos[0]
 
         # In case of pellets
         unless $pellets.empty?
-          dest = $pellets.sample
+          dest = $pellets[0]
 
           # Better path: get the furthest pellet in one direction, in hope to get more on the way ?
 
