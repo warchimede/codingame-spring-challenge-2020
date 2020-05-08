@@ -90,6 +90,7 @@ loop do
     $pacs.each do |pac_id, pos|
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
+
       if arrived or stuck
         # Stay if cannot move
         dest = pos
@@ -100,22 +101,22 @@ loop do
           {'x' => pos['x'], 'y' => pos['y']+1 },
           {'x' => pos['x']-1, 'y' => pos['y'] },
           {'x' => pos['x'], 'y' => pos['y']-1 }
-        ].select { |p| # filter walls
+        ].select do |p| # filter walls
           y = p['y']
           x = p['x']
           $Map[y][x] != "#"
-        }
+        end
 
         # filter other pacs positions
         if possible_pos.length > 1
-          possible_pos = possible_pos.select { |p|
+          possible_pos = possible_pos.select do |p|
             res = true
             $pacs.each do |p_pac_id, p_pos|
               unless pac_id == p_pac_id
-                res = res and p['x'] != p_pos['x'] and p['y'] != p_pos['y']
+                res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
               end
             end
-          }
+          end
         end
         dest = possible_pos.sample unless possible_pos.empty?
 
@@ -147,7 +148,42 @@ loop do
         $pacs[pac_id]['dest_x'] = dest['x']
         $pacs[pac_id]['dest_y'] = dest['y']
       end
-    end
+
+    #   if stuck
+    #     # Stay if cannot move
+    #     dest = pos
+
+    #     possible_pos = [ # all possible directions
+    #       {'x' => pos['x']+1, 'y' => pos['y'] },
+    #       {'x' => pos['x'], 'y' => pos['y']+1 },
+    #       {'x' => pos['x']-1, 'y' => pos['y'] },
+    #       {'x' => pos['x'], 'y' => pos['y']-1 }
+    #     ].select { |p| # filter walls
+    #       y = p['y']
+    #       x = p['x']
+    #       $Map[y][x] != "#"
+    #     }
+
+    #     # filter other pacs positions
+    #     if possible_pos.length > 1
+    #       possible_pos = possible_pos.select do |p|
+    #         res = true
+    #         $pacs.each do |p_pac_id, p_pos|
+    #           unless pac_id == p_pac_id
+    #             res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+    #           end
+    #         end
+    #       end
+    #     end
+
+    #     if possible_pos.length > 1
+    #       possible_pos = possible_pos.select do |p|
+
+    #       end
+    #     end
+    #     dest = possible_pos.sample unless possible_pos.empty?
+    #   end
+    # end
     
     # Generate action
     action = []
