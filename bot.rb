@@ -147,9 +147,8 @@ loop do
         
         $pacs[pac_id]['dest_x'] = dest['x']
         $pacs[pac_id]['dest_y'] = dest['y']
-      end
 
-      if stuck
+      elsif stuck
         # Stay if cannot move
         dest = pos
 
@@ -178,14 +177,14 @@ loop do
 
         if possible_pos.length > 1
           possible_pos = possible_pos.select do |p|
-
+            p['x'] != pos['last_x'] or p['y'] != pos['last_y']
           end
         end
         dest = possible_pos.sample unless possible_pos.empty?
-      end
 
-      $pacs[pac_id]['dest_x'] = dest['x']
-      $pacs[pac_id]['dest_y'] = dest['y']
+        $pacs[pac_id]['dest_x'] = dest['x']
+        $pacs[pac_id]['dest_y'] = dest['y']
+      end
     end
     
     # Generate action
