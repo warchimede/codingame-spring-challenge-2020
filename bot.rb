@@ -42,10 +42,14 @@ loop do
             $pacs[pac_id] = {
               'x' => x,
               'y' => y,
+              'last_x' => x,
+              'last_y' => y,
               'dest_x' => x,
               'dest_y' => y
             }
           else
+            $pacs[pac_id]['last_x'] = $pacs[pac_id]['x']
+            $pacs[pac_id]['last_y'] = $pacs[pac_id]['y']
             $pacs[pac_id]['x'] = x
             $pacs[pac_id]['y'] = y
           end
@@ -78,7 +82,9 @@ loop do
 
     # Destination selection for pacs
     $pacs.each do |pac_id, pos|
-      if pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
+      arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
+      stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
+      if arrived or stuck
         dest = $pellets.sample
         
         unless high_value_pellets.empty?
