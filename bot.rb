@@ -44,7 +44,6 @@ loop do
         ############################################################
         # Need to remove dead pacs, so checkin only alive pacs
         if mine
-          STDERR.puts "DATA PAC: #{pac_id}"
           if $pacs[pac_id].nil?
             $new_pacs[pac_id] = {
               'x' => x,
@@ -87,22 +86,26 @@ loop do
 
     # Destination selection for pacs which are arrived or stuck in place
     $pacs.each do |pac_id, pos|
-      STDERR.puts "PAC: #{pac_id}"
-
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
         # In case no pellet in sight....
-        possible_pos = [
-          {'x' => pos['x'], 'y' => pos['y']-1 },
+        possible_pos = [ # all possible directions
           {'x' => pos['x']+1, 'y' => pos['y'] },
           {'x' => pos['x'], 'y' => pos['y']+1 },
-          {'x' => pos['x']-1, 'y' => pos['y'] }
-        ].select { |p| 
+          {'x' => pos['x']-1, 'y' => pos['y'] },
+          {'x' => pos['x'], 'y' => pos['y']-1 }
+        ].select { |p| # filter walls
           y = p['y']
           x = p['x']
           $Map[y][x] != "#"
         }
+        # filter last position when possible
+        if possible_pos.length > 1
+          possible_pos.select { |p|
+            p['x'] != pos['last_x'] and p['y'] != pos['last_y']
+          }
+        end
         dest = possible_pos.sample
 
         # In case of pellets
