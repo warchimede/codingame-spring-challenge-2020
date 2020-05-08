@@ -79,6 +79,7 @@ loop do
     ############################################################
     high_value_pellets = $pellets.select { |p| p["v"] == 10 }
 
+    # Destination selection for pacs
     $pacs.each do |pac_id, pos|
       if pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
         dest = $pellets.sample
@@ -92,6 +93,11 @@ loop do
       end
     end
     
-    puts "MOVE #{$pac_id} #{$px} #{$py}"
+    # Generate action
+    action = []
+    $pacs.each do |pac_id, pos|
+      action << "MOVE #{$pac_id} #{$pos['dest_x']} #{$pos['dest_y']}"
+    end
+    puts action.join('|')
     ############################################################
 end
