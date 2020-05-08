@@ -121,19 +121,25 @@ loop do
 
         # In case of pellets
         unless $pellets.empty?
-          dest = $pellets[0]
-
-          # Better path: get the furthest pellet in one direction, in hope to get more on the way ?
-
-          
-          # Best path: get the closest high value pellet if there is one in sight
-          unless high_value_pellets.empty?
-            dest = high_value_pellets[0]
-            high_value_pellets.each do |pellet|
-              actual_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+          if high_value_pellets.empty? # Better path: get the closest pellet in one direction
+            dest = $pellets.sample
+            current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+            $pellets.each do |pellet|
               pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
-
-              dest = pellet if pellet_dist < actual_dist
+              if pellet_dist < current_dist
+                dest = pellet
+                current_dist = pellet_dist
+              end
+            end
+          else # Best path: get the closest high value pellet if there is one in sight
+            dest = high_value_pellets[0]
+            current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+            high_value_pellets.each do |pellet|
+              pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+              if pellet_dist < current_dist
+                dest = pellet
+                current_dist = pellet_dist
+              end
             end
           end
         end
