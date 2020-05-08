@@ -66,11 +66,7 @@ loop do
         # value: amount of points this pellet is worth
         x, y, value = gets.split(" ").collect {|x| x.to_i}
 
-        ############################################################
-        if value > 0
-          $pellets << { "x" => x, "y" => y, "v" => value }
-        end
-        ############################################################
+        $pellets << { "x" => x, "y" => y, "v" => value }
     end
     
     # Write an action using puts
@@ -80,15 +76,24 @@ loop do
     ############################################################
     high_value_pellets = $pellets.select { |p| p["v"] == 10 }
 
-    # Destination selection for pacs
+    STDERR.puts high_value_pellets
+
+    # Destination selection for pacs which are arrived or stuck in place
     $pacs.each do |pac_id, pos|
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
         dest = $pellets.sample
         
+        # Choose the closest high value pellet if there is one
         unless high_value_pellets.empty?
-          dest = high_value_pellets.sample
+          dest = high_value_pellets[0]
+          high_value_pellets.each do |pellet|
+            actual_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+            pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+
+            dest = pellet if pellet_dist < actual_dist
+          end
         end
 
         $pacs[pac_id]['dest_x'] = dest['x']
