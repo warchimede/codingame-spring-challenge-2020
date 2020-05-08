@@ -10,7 +10,7 @@ map = Array.new(height, "X")
     map[y] = row.chars 
 end
 
-#######################
+####################### Globals
 $Map = map
 $pacs = {}
 $pellets = []
@@ -76,26 +76,39 @@ loop do
     ############################################################
     high_value_pellets = $pellets.select { |p| p["v"] == 10 }
 
-    STDERR.puts high_value_pellets
-
     # Destination selection for pacs which are arrived or stuck in place
     $pacs.each do |pac_id, pos|
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
-        dest = $pellets.sample
-        
-        # Choose the closest high value pellet if there is one
-        unless high_value_pellets.empty?
-          dest = high_value_pellets[0]
-          high_value_pellets.each do |pellet|
-            actual_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
-            pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+        # In case no pellet in sight....
+        possible_pos = [
+          {'x' => pos['x'], 'y' => pos['y']-1 },
+          {'x' => pos['x']+1, 'y' => pos['y'] },
+          {'x' => pos['x'], 'y' => pos['y']+1 },
+          {'x' => pos['x']-1, 'y' => pos['y'] }
+        ].select { |p| $Map['y']['x'] == ' ' }
+        dest = possible_pos.sample
 
-            dest = pellet if pellet_dist < actual_dist
+        # In case of pellets
+        unless $pellets.empty?
+          dest = $pellets.sample
+
+          # Better path: get the furthest pellet in one direction, in hope to get more on the way ?
+
+          
+          # Best path: get the closest high value pellet if there is one in sight
+          unless high_value_pellets.empty?
+            dest = high_value_pellets[0]
+            high_value_pellets.each do |pellet|
+              actual_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+              pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+
+              dest = pellet if pellet_dist < actual_dist
+            end
           end
         end
-
+        
         $pacs[pac_id]['dest_x'] = dest['x']
         $pacs[pac_id]['dest_y'] = dest['y']
       end
