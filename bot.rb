@@ -4,19 +4,18 @@ STDOUT.sync = true # DO NOT REMOVE
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 width, height = gets.split(" ").collect {|x| x.to_i}
-$map = Array.new(height, "X")
+map = Array.new(height, "X")
 (0...height).step do |y|
     row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
-    $map[y] = row.chars 
+    map[y] = row.chars 
 end
 
 #######################
-$done = true
-$pac_id = -1
-$x = -1
-$y = -1
-$px = -1
-$py = -1
+$Map = map
+
+STDERR.puts $Map
+
+$pacs = {}
 $pellets = []
 #######################
 
@@ -42,9 +41,17 @@ loop do
 
         ############################################################
         if mine
-          $pac_id = pac_id
-          $x = x
-          $y = y
+          if $pacs.empty?
+            $pacs[pac_id] = {
+              'x' => x,
+              'y' => y,
+              'dest_x' => x,
+              'dest_y' => y
+            }
+          else
+            $pacs[pac_id]['x'] = x
+            $pacs[pac_id]['y'] = y
+          end
         end
         ############################################################
     end
@@ -70,29 +77,19 @@ loop do
     
     # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
     ############################################################
-    if $x == $px and $y == $py 
-      $done = true
-    end
+    high_value_pellets = $pellets.select { |p| p["v"] == 10 }
 
-    if $done
-      $done = false
-      $px = -1
-      $py = -1
-
-      # Selection
-      selected = $pellets[0]
-
-      high_val = $pellets.select { |p| p["v"] == 10 }
-      if high_val.empty?
-        selected = $pellets.sample
-      else
-        if $x > width/2
-          high_val = high_val.reverse
+    $pacs.each do |pac_id, pos|
+      if pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
+        dest = $pellets.sample
+        
+        unless high_value_pellets.empty?
+          dest = high_value_pellets.sample
         end
-        selected = high_val[0]
+
+        $pacs[pac_id]['dest_x'] = dest['x']
+        $pacs[pac_id]['dest_y'] = dest['y']
       end
-      $px = selected["x"]
-      $py = selected["y"]
     end
     
     puts "MOVE #{$pac_id} #{$px} #{$py}"
