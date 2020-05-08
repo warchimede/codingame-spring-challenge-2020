@@ -13,11 +13,16 @@ end
 ####################### Globals
 $Map = map
 $pacs = {}
+$new_pacs = {}
 $pellets = []
 #######################
 
 # game loop
 loop do
+    ############################################################
+    # Reset new_pacs
+    $new_pacs = {}
+    ############################################################
     my_score, opponent_score = gets.split(" ").collect {|x| x.to_i}
     visible_pac_count = gets.to_i # all your pacs and enemy pacs in sight
     visible_pac_count.times do
@@ -37,9 +42,11 @@ loop do
         ability_cooldown = ability_cooldown.to_i
 
         ############################################################
+        # Need to remove dead pacs, so checkin only alive pacs
         if mine
+          STDERR.puts "DATA PAC: #{pac_id}"
           if $pacs[pac_id].nil?
-            $pacs[pac_id] = {
+            $new_pacs[pac_id] = {
               'x' => x,
               'y' => y,
               'last_x' => x,
@@ -48,16 +55,18 @@ loop do
               'dest_y' => y
             }
           else
-            $pacs[pac_id]['last_x'] = $pacs[pac_id]['x']
-            $pacs[pac_id]['last_y'] = $pacs[pac_id]['y']
-            $pacs[pac_id]['x'] = x
-            $pacs[pac_id]['y'] = y
+            $new_pacs[pac_id] = $pacs[pac_id]
+            $new_pacs[pac_id]['last_x'] = $pacs[pac_id]['x']
+            $new_pacs[pac_id]['last_y'] = $pacs[pac_id]['y']
+            $new_pacs[pac_id]['x'] = x
+            $new_pacs[pac_id]['y'] = y
           end
         end
         ############################################################
     end
 
     ######################
+    $pacs = $new_pacs # update pacs with the alive ones
     $pellets = []
     ######################
 
@@ -78,6 +87,8 @@ loop do
 
     # Destination selection for pacs which are arrived or stuck in place
     $pacs.each do |pac_id, pos|
+      STDERR.puts "PAC: #{pac_id}"
+
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
@@ -90,7 +101,7 @@ loop do
         ].select { |p| 
           y = p['y']
           x = p['x']
-          $Map[y][x] == ' '
+          $Map[y][x] != "#"
         }
         dest = possible_pos.sample
 
