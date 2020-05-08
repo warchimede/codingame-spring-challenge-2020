@@ -95,35 +95,35 @@ loop do
         # Stay if cannot move
         dest = pos
 
-        # In case no pellet in sight....
-        possible_pos = [ # all possible directions
-          {'x' => pos['x']+1, 'y' => pos['y'] },
-          {'x' => pos['x'], 'y' => pos['y']+1 },
-          {'x' => pos['x']-1, 'y' => pos['y'] },
-          {'x' => pos['x'], 'y' => pos['y']-1 }
-        ].select { |p| # stay in the map
-          p['x'] < $Width and p['y'] < $Height
-        }.select do |p| # filter walls
-          y = p['y']
-          x = p['x']
-          $Map[y][x] != "#"
-        end
+        if $pellets.empty?
+          # In case no pellet in sight....
+          possible_pos = [ # all possible directions
+            {'x' => pos['x']+1, 'y' => pos['y'] },
+            {'x' => pos['x'], 'y' => pos['y']+1 },
+            {'x' => pos['x']-1, 'y' => pos['y'] },
+            {'x' => pos['x'], 'y' => pos['y']-1 }
+          ].select { |p| # stay in the map
+            p['x'] < $Width and p['y'] < $Height
+          }.select { |p| # filter walls
+            y = p['y']
+            x = p['x']
+            $Map[y][x] != "#"
+          }
 
-        # filter other pacs positions
-        if possible_pos.length > 1
-          possible_pos = possible_pos.select do |p|
-            res = true
-            $pacs.each do |p_pac_id, p_pos|
-              unless pac_id == p_pac_id
-                res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+          # filter other pacs positions
+          if possible_pos.length > 1
+            possible_pos = possible_pos.select do |p|
+              res = true
+              $pacs.each do |p_pac_id, p_pos|
+                unless pac_id == p_pac_id
+                  res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+                end
               end
             end
           end
-        end
-        dest = possible_pos.sample unless possible_pos.empty?
-
-        # In case of pellets
-        unless $pellets.empty?
+          dest = possible_pos.sample unless possible_pos.empty?
+        else
+          # In case of pellets
           if high_value_pellets.empty? # Better path: get the closest pellet in one direction
             dest = $pellets.sample
             current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
@@ -146,7 +146,7 @@ loop do
             end
           end
         end
-        
+      
         $pacs[pac_id]['dest_x'] = dest['x']
         $pacs[pac_id]['dest_y'] = dest['y']
 
