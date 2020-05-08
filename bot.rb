@@ -4,8 +4,10 @@ STDOUT.sync = true # DO NOT REMOVE
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 width, height = gets.split(" ").collect {|x| x.to_i}
-height.times do
+$map = Array.new(height, "X")
+(0...height).step do |y|
     row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
+    $map[y] = row.chars 
 end
 
 #######################
@@ -80,7 +82,7 @@ loop do
       # Selection
       selected = $pellets[0]
 
-      high_val = $pellets.select { |p| p["v"] > 1 }
+      high_val = $pellets.select { |p| p["v"] == 10 }
       if high_val.empty?
         selected = $pellets.sample
       else
