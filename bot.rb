@@ -20,8 +20,9 @@ $pellets = []
 # game loop
 loop do
     ############################################################
-    # Reset new_pacs
+    # Reset for new loop
     $new_pacs = {}
+    $pellets = []
     ############################################################
     my_score, opponent_score = gets.split(" ").collect {|x| x.to_i}
     visible_pac_count = gets.to_i # all your pacs and enemy pacs in sight
@@ -66,7 +67,6 @@ loop do
 
     ######################
     $pacs = $new_pacs # update pacs with the alive ones
-    $pellets = []
     ######################
 
     visible_pellet_count = gets.to_i # all pellets in sight
