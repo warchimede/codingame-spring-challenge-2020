@@ -91,7 +91,7 @@ loop do
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
-        # Init if cannot move
+        # Stay if cannot move
         dest = pos
 
         # In case no pellet in sight....
@@ -105,13 +105,19 @@ loop do
           x = p['x']
           $Map[y][x] != "#"
         }
-        # filter last position when possible
+
+        # filter other pacs positions
         if possible_pos.length > 1
           possible_pos = possible_pos.select { |p|
-            p['x'] != pos['last_x'] and p['y'] != pos['last_y']
+            res = true
+            $pacs.each do |p_pac_id, p_pos|
+              unless pac_id == p_pac_id
+                res = res and p['x'] != p_pos['x'] and p['y'] != p_pos['y']
+              end
+            end
           }
         end
-        dest = possible_pos[0] unless possible_pos.empty?
+        dest = possible_pos.sample unless possible_pos.empty?
 
         # In case of pellets
         unless $pellets.empty?
