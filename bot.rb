@@ -3,9 +3,9 @@ STDOUT.sync = true # DO NOT REMOVE
 
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
-width, height = gets.split(" ").collect {|x| x.to_i}
-map = Array.new(height, "X")
-(0...height).step do |y|
+$Width, $Height = gets.split(" ").collect {|x| x.to_i}
+map = Array.new($Height, "X")
+(0...$Height).step do |y|
     row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
     map[y] = row.chars 
 end
@@ -101,7 +101,9 @@ loop do
           {'x' => pos['x'], 'y' => pos['y']+1 },
           {'x' => pos['x']-1, 'y' => pos['y'] },
           {'x' => pos['x'], 'y' => pos['y']-1 }
-        ].select do |p| # filter walls
+        ].select { |p| # stay in the map
+          p['x'] < $Width and p['y'] < $Height
+        }.select do |p| # filter walls
           y = p['y']
           x = p['x']
           $Map[y][x] != "#"
@@ -157,7 +159,9 @@ loop do
           {'x' => pos['x'], 'y' => pos['y']+1 },
           {'x' => pos['x']-1, 'y' => pos['y'] },
           {'x' => pos['x'], 'y' => pos['y']-1 }
-        ].select { |p| # filter walls
+        ].select { |p| # stay in the map
+          p['x'] < $Width and p['y'] < $Height
+        }.select { |p| # filter walls
           y = p['y']
           x = p['x']
           $Map[y][x] != "#"
