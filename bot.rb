@@ -183,6 +183,9 @@ loop do
         end
         dest = possible_pos.sample unless possible_pos.empty?
       end
+
+      $pacs[pac_id]['dest_x'] = dest['x']
+      $pacs[pac_id]['dest_y'] = dest['y']
     end
     
     # Generate action
