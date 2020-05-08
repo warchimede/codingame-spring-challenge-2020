@@ -183,7 +183,7 @@ loop do
     #     end
     #     dest = possible_pos.sample unless possible_pos.empty?
     #   end
-    # end
+    end
     
     # Generate action
     action = []
