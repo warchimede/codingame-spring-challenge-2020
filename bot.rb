@@ -82,6 +82,8 @@ loop do
     
     # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
     ############################################################
+
+    # PATH FINDING
     high_value_pellets = $pellets.select { |p| p["v"] == 10 }
 
     # Destination selection for pacs which are arrived or stuck in place
@@ -89,6 +91,9 @@ loop do
       arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
       stuck = pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
       if arrived or stuck
+        # Init if cannot move
+        dest = pos
+
         # In case no pellet in sight....
         possible_pos = [ # all possible directions
           {'x' => pos['x']+1, 'y' => pos['y'] },
@@ -106,7 +111,7 @@ loop do
             p['x'] != pos['last_x'] and p['y'] != pos['last_y']
           }
         end
-        dest = possible_pos[0]
+        dest = possible_pos[0] unless possible_pos.empty?
 
         # In case of pellets
         unless $pellets.empty?
