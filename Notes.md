@@ -19,3 +19,4 @@
 ### Regular pellet in sight
 - get the closest unless last position
 
+---> Essayer de gérer les tunnels de la map
