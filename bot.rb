@@ -135,9 +135,9 @@ loop do
       end
       unless pacs.empty?
         pac_id = pacs.keys[0]
-        current_dist = distance pacs[pac_id] hp
+        current_dist = distance pacs[pac_id], hp
         pacs.keys.each do |p_id|
-          hp_dist = distance pacs[p_id] hp
+          hp_dist = distance pacs[p_id], hp
           if hp_dist < current_dist
             pac_id = p_id
             current_dist = hp_dist
