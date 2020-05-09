@@ -17,6 +17,21 @@ $new_pacs = {}
 $pellets = []
 #######################
 
+def possible_positions(pos)
+  [ # all possible directions
+    {'x' => pos['x']+1, 'y' => pos['y'] },
+    {'x' => pos['x'], 'y' => pos['y']+1 },
+    {'x' => pos['x']-1, 'y' => pos['y'] },
+    {'x' => pos['x'], 'y' => pos['y']-1 }
+  ].select { |p| # stay in the map
+    p['x'] > 0 and p['x'] < $Width and p['y'] > 0 and p['y'] < $Height
+  }.select { |p| # filter walls
+    y = p['y']
+    x = p['x']
+    $Map[y][x] != "#"
+  }
+end
+
 # game loop
 loop do
   ############################################################
@@ -53,7 +68,7 @@ loop do
           'last_y' => y,
           'dest_x' => x,
           'dest_y' => y,
-          'cd' => ability_cooldown
+          'cd' => ability_cooldown,
         }
       else
         $new_pacs[pac_id] = $pacs[pac_id]
@@ -99,18 +114,7 @@ loop do
 
       if $pellets.empty?
         # No pellet in sight....
-        possible_pos = [ # all possible directions
-          {'x' => pos['x']+1, 'y' => pos['y'] },
-          {'x' => pos['x'], 'y' => pos['y']+1 },
-          {'x' => pos['x']-1, 'y' => pos['y'] },
-          {'x' => pos['x'], 'y' => pos['y']-1 }
-        ].select { |p| # stay in the map
-          p['x'] < $Width and p['y'] < $Height
-        }.select { |p| # filter walls
-          y = p['y']
-          x = p['x']
-          $Map[y][x] != "#"
-        }
+        possible_pos = possible_positions pos
 
         # filter other pacs positions
         if possible_pos.length > 1
@@ -164,18 +168,7 @@ loop do
       # Stay if cannot move
       dest = pos
 
-      possible_pos = [ # all possible directions
-        {'x' => pos['x']+1, 'y' => pos['y'] },
-        {'x' => pos['x'], 'y' => pos['y']+1 },
-        {'x' => pos['x']-1, 'y' => pos['y'] },
-        {'x' => pos['x'], 'y' => pos['y']-1 }
-      ].select { |p| # stay in the map
-        p['x'] < $Width and p['y'] < $Height
-      }.select { |p| # filter walls
-        y = p['y']
-        x = p['x']
-        $Map[y][x] != "#"
-      }
+      possible_pos = possible_positions pos
 
       # filter other pacs positions
       if possible_pos.length > 1
