@@ -35,7 +35,7 @@ def possible_positions(pos)
     {'x' => pos['x']-1, 'y' => pos['y'] },
     {'x' => pos['x'], 'y' => pos['y']-1 }
   ].select { |p| # stay in the map
-    p['x'] > 0 and p['x'] < $Width and p['y'] > 0 and p['y'] < $Height
+    p['x'] >= 0 and p['x'] < $Width and p['y'] >= 0 and p['y'] < $Height
   }.select { |p| # filter walls
     y = p['y']
     x = p['x']
