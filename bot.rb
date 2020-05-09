@@ -15,11 +15,13 @@ $Map = map
 $pacs = {}
 $new_pacs = {}
 $pellets = []
+$high_value_pellets = []
 #######################
 
 def reset
   $new_pacs = {}
   $pellets = []
+  $high_value_pellets = []
 end
 
 def possible_positions(pos)
@@ -96,6 +98,7 @@ loop do
     x, y, value = gets.split(" ").collect {|x| x.to_i}
 
     $pellets << { "x" => x, "y" => y, "v" => value }
+    $high_value_pellets << { "x" => x, "y" => y, "v" => value } if value == 10
   end
     
   # Write an action using puts
@@ -105,8 +108,6 @@ loop do
   ############################################################
 
   # PATH FINDING
-  high_value_pellets = $pellets.select { |p| p["v"] == 10 }
-
   # Destination selection for pacs which are arrived or stuck in place
   $pacs.each do |pac_id, pos|
     arrived = pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
@@ -142,7 +143,7 @@ loop do
         dest = possible_pos.sample unless possible_pos.empty?
       else
         # In case of pellets
-        if high_value_pellets.empty? # Better path: get the closest pellet in one direction
+        if $high_value_pellets.empty? # Better path: get the closest pellet in one direction
           dest = $pellets.sample
           current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
           $pellets.each do |pellet|
@@ -153,9 +154,9 @@ loop do
             end
           end
         else # Best path: get the closest high value pellet if there is one in sight
-          dest = high_value_pellets[0]
+          dest = $high_value_pellets.sample
           current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
-          high_value_pellets.each do |pellet|
+          $high_value_pellets.each do |pellet|
             pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
             if pellet_dist < current_dist
               dest = pellet
