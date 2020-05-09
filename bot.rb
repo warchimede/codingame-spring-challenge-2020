@@ -52,7 +52,8 @@ loop do
           'last_x' => x,
           'last_y' => y,
           'dest_x' => x,
-          'dest_y' => y
+          'dest_y' => y,
+          'cd' => ability_cooldown
         }
       else
         $new_pacs[pac_id] = $pacs[pac_id]
@@ -60,6 +61,7 @@ loop do
         $new_pacs[pac_id]['last_y'] = $pacs[pac_id]['y']
         $new_pacs[pac_id]['x'] = x
         $new_pacs[pac_id]['y'] = y
+        $new_pacs[pac_id]['cd'] = ability_cooldown
       end
     end
     ############################################################
@@ -204,7 +206,11 @@ loop do
   # Generate action
   action = []
   $pacs.each do |pac_id, pos|
-    action << "MOVE #{pac_id} #{pos['dest_x']} #{pos['dest_y']}"
+    if $pacs[pac_id]['cd'] == 0
+      action << "SPEED #{pac_id}"
+    else
+      action << "MOVE #{pac_id} #{pos['dest_x']} #{pos['dest_y']}"
+    end
   end
   puts action.join('|')
   ############################################################
