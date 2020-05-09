@@ -16,7 +16,9 @@
 - avance d'un pas dans une direction, pas en arrière sauf si c'est la seule
 ### High pellet in sight
 - go get it unless last position
+- the pellet chooses the pac instead of th epac choosing
 ### Regular pellet in sight
 - get the closest unless last position
 
----> Essayer de gérer les tunnels de la map
+---> ne pas target les mêmes grosses pillules
+---> changer le calcul de pillule la plus proche
