@@ -17,6 +17,11 @@ $new_pacs = {}
 $pellets = []
 #######################
 
+def reset
+  $new_pacs = {}
+  $pellets = []
+end
+
 def possible_positions(pos)
   [ # all possible directions
     {'x' => pos['x']+1, 'y' => pos['y'] },
@@ -36,8 +41,7 @@ end
 loop do
   ############################################################
   # Reset for new loop
-  $new_pacs = {}
-  $pellets = []
+  reset
   ############################################################
   my_score, opponent_score = gets.split(" ").collect {|x| x.to_i}
   visible_pac_count = gets.to_i # all your pacs and enemy pacs in sight
