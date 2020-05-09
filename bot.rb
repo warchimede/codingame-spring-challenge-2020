@@ -24,6 +24,10 @@ def reset
   $high_value_pellets = []
 end
 
+def distance(p1, p2)
+  (p1['x'] - p2['x'])**2 + (p1['y'] - p2['y'])**2
+end
+
 def possible_positions(pos)
   [ # all possible directions
     {'x' => pos['x']+1, 'y' => pos['y'] },
@@ -145,9 +149,9 @@ loop do
         # In case of pellets
         if $high_value_pellets.empty? # Better path: get the closest pellet in one direction
           dest = $pellets.sample
-          current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+          current_dist = distance pos, dest
           $pellets.each do |pellet|
-            pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+            pellet_dist = distance pos, pellet
             if pellet_dist < current_dist
               dest = pellet
               current_dist = pellet_dist
@@ -155,9 +159,9 @@ loop do
           end
         else # Best path: get the closest high value pellet if there is one in sight
           dest = $high_value_pellets.sample
-          current_dist = (pos['x'] - dest['x'])**2 + (pos['y'] - dest['y'])**2
+          current_dist = distance pos, dest
           $high_value_pellets.each do |pellet|
-            pellet_dist = (pos['x'] - pellet['x'])**2 + (pos['y'] - pellet['y'])**2
+            pellet_dist = distance pos, pellet
             if pellet_dist < current_dist
               dest = pellet
               current_dist = pellet_dist
