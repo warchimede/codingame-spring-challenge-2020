@@ -158,50 +158,50 @@ loop do
   end
 
   arrived.each do |pac_id, pos|
-     # Stay if cannot move
-     dest = pos
+    # Stay if cannot move
+    dest = pos
 
-     if $pellets.empty?
-       # No pellet in sight....
-       possible_pos = possible_positions pos
+    if $pellets.empty?
+      # No pellet in sight....
+      possible_pos = possible_positions pos
 
-       # filter other pacs positions
-       if possible_pos.length > 1
-         possible_pos = possible_pos.select do |p|
-           res = true
-           $pacs.each do |p_pac_id, p_pos|
-             unless pac_id == p_pac_id
-               res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
-             end
-           end
-         end
-       end
+      # filter other pacs positions
+      if possible_pos.length > 1
+        possible_pos = possible_pos.select do |p|
+          res = true
+          $pacs.each do |p_pac_id, p_pos|
+            unless pac_id == p_pac_id
+              res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+            end
+          end
+        end
+      end
 
-       # remove last position
-       if possible_pos.length > 1
-         possible_pos = possible_pos.select do |p|
-           p['x'] != pos['last_x'] or p['y'] != pos['last_y']
-         end
-       end
+      # remove last position
+      if possible_pos.length > 1
+        possible_pos = possible_pos.select do |p|
+          p['x'] != pos['last_x'] or p['y'] != pos['last_y']
+        end
+      end
 
-       dest = possible_pos.sample unless possible_pos.empty?
-     else
-       # In case of pellets
-       dest = $pellets.sample
+      dest = possible_pos.sample unless possible_pos.empty?
+    else
+      # In case of pellets
+      dest = $pellets.sample
 
-       # Better path: get the closest pellet in one direction  
-       current_dist = distance pos, dest
-       $pellets.each do |pellet|
-         pellet_dist = distance pos, pellet
-         if pellet_dist < current_dist
-           dest = pellet
-           current_dist = pellet_dist
-         end
-       end
-     end
+      # Better path: get the closest pellet in one direction  
+      current_dist = distance pos, dest
+      $pellets.each do |pellet|
+        pellet_dist = distance pos, pellet
+        if pellet_dist < current_dist
+          dest = pellet
+          current_dist = pellet_dist
+        end
+      end
+    end
      
-     $pacs[pac_id]['dest_x'] = dest['x']
-     $pacs[pac_id]['dest_y'] = dest['y']
+    $pacs[pac_id]['dest_x'] = dest['x']
+    $pacs[pac_id]['dest_y'] = dest['y']
   end
 
   stuck.each do |pac_id, pos|
