@@ -1,6 +1,68 @@
 STDOUT.sync = true # DO NOT REMOVE
 # Grab the pellets as fast as you can!
 
+####################### MODEL
+# Position
+class Position
+  attr_accessor :x, :y
+  def initialize(x, y)
+    @x = 0
+    @y = 0
+  end
+end
+
+# Pac
+class Pac
+  attr_accessor :id, :mine, :pos, :last_pos, :dest, :stl, :cd
+  def initialize(id, mine, pos, last_pos, dest, stl, cd)
+    @id = id
+    @mine = mine
+    @pos = pos
+    @last_pos = last_pos
+    @dest = dest
+    @stl = stl
+    @cd = cd
+  end
+
+  def arrived?
+    @pos.x == @dest.x and @pos.y == @dest.y
+  end
+
+  def stuck?
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y
+  end
+
+  def possible_next_positions(width, height, map)
+    [ # all possible directions
+      Position.new(@pos.x+1, @pos.y),
+      Position.new(@pos.x, @pos.y+1),
+      Position.new(@pos.x-1, @pos.y),
+      Position.new(@pos.x, @pos.y-1)
+    ].select { |p| # stay in the map
+      p.x >= 0 and p.x < width and p.y >= 0 and p.y < height
+    }.select { |p| # filter walls
+      y = p.y
+      x = p.x
+      map[y][x] != "#"
+    }
+  end
+end
+
+# Pellet
+class Pellet
+  attr_accessor :pos, :value
+  def initialize(pos, value)
+    @pos = pos
+    @value = value
+  end
+end
+
+def distance(p1, p2)
+  (p1.x - p2.x)**2 + (p1.y - p2.y)**2
+end
+
+#######################
+
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
@@ -15,17 +77,13 @@ $Map = map
 $pacs = {}
 $new_pacs = {}
 $pellets = []
-$high_value_pellets = []
+$super_pellets = []
 #######################
 
 def reset
   $new_pacs = {}
   $pellets = []
-  $high_value_pellets = []
-end
-
-def distance(p1, p2)
-  (p1['x'] - p2['x'])**2 + (p1['y'] - p2['y'])**2
+  $super_pellets = []
 end
 
 def possible_positions(pos)
@@ -110,7 +168,7 @@ loop do
     x, y, value = gets.split(" ").collect {|x| x.to_i}
 
     $pellets << { "x" => x, "y" => y, "v" => value }
-    $high_value_pellets << { "x" => x, "y" => y, "v" => value } if value == 10
+    $super_pellets << { "x" => x, "y" => y, "v" => value } if value == 10
   end
     
   # Write an action using puts
@@ -121,8 +179,8 @@ loop do
   
   # PATH FINDING
   # High value pellets choose pacs
-  unless $high_value_pellets.empty?
-    high_val = $high_value_pellets.select do |hp| # choose only not targeted ones
+  unless $super_pellets.empty?
+    high_val = $super_pellets.select do |hp| # choose only not targeted ones
       res = true
       $pacs.each do |p_id, p_pos|
         res = res and (hp['x'] != p_pos['dest_x'] or hp['y'] != p_pos['dest_y'])
