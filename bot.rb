@@ -2,6 +2,11 @@ STDOUT.sync = true # DO NOT REMOVE
 # Grab the pellets as fast as you can!
 
 ####################### MODEL
+# Type
+$Rock = "ROCK"
+$Paper = "PAPER"
+$Scissors = "SCISSORS"
+
 # Position
 class Position
   attr_accessor :x, :y
@@ -13,15 +18,17 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :mine, :pos, :last_pos, :dest, :stl, :cd
-  def initialize(id, mine, pos, last_pos, dest, stl, cd)
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
+  def initialize(id, type, mine, pos, last_pos, dest, stl, cd)
     @id = id
+    @type = type
     @mine = mine
     @pos = pos
     @last_pos = last_pos
     @dest = dest
     @stl = stl
     @cd = cd
+    @dead = false
   end
 
   def arrived?
@@ -66,7 +73,7 @@ end
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
-map = Array.new($Height, "X")
+map = Array.new($Height, "#")
 (0...$Height).step do |y|
     row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
     map[y] = row.chars 
@@ -75,38 +82,20 @@ end
 ####################### Globals
 $Map = map
 $pacs = {}
-$new_pacs = {}
 $pellets = []
 $super_pellets = []
 #######################
 
 def reset
-  $new_pacs = {}
   $pellets = []
   $super_pellets = []
-end
-
-def possible_positions(pos)
-  [ # all possible directions
-    {'x' => pos['x']+1, 'y' => pos['y'] },
-    {'x' => pos['x'], 'y' => pos['y']+1 },
-    {'x' => pos['x']-1, 'y' => pos['y'] },
-    {'x' => pos['x'], 'y' => pos['y']-1 }
-  ].select { |p| # stay in the map
-    p['x'] >= 0 and p['x'] < $Width and p['y'] >= 0 and p['y'] < $Height
-  }.select { |p| # filter walls
-    y = p['y']
-    x = p['x']
-    $Map[y][x] != "#"
-  }
-end
-
-def arrived?(pos)
-  pos['x'] == pos['dest_x'] and pos['y'] == pos['dest_y']
-end
-
-def stuck?(pos)
-  pos['x'] == pos['last_x'] and pos['y'] == pos['last_y']
+  # consider all pacs are dead
+  dead_pacs = {}
+  $pacs.each do |id, pac|
+    pac.dead = true
+    dead_pacs['id'] = pac
+  end
+  $pacs = dead_pacs
 end
 
 # game loop
@@ -134,41 +123,37 @@ loop do
     ability_cooldown = ability_cooldown.to_i
 
     ############################################################
-    # Need to remove dead pacs, so checkin only alive pacs
-    if mine
+    if mine # TODO: also keep track of other pacs
       if $pacs[pac_id].nil?
-        $new_pacs[pac_id] = {
-          'x' => x,
-          'y' => y,
-          'last_x' => x,
-          'last_y' => y,
-          'dest_x' => x,
-          'dest_y' => y,
-          'cd' => ability_cooldown,
-        }
+        pos = Position.new(x, y)
+        pac = Pac.new(pac_id, type_id, mine, pos, pos, pos, speed_turns_left, ability_cooldown)
+        $pacs[pac_id] = pac
       else
-        $new_pacs[pac_id] = $pacs[pac_id]
-        $new_pacs[pac_id]['last_x'] = $pacs[pac_id]['x']
-        $new_pacs[pac_id]['last_y'] = $pacs[pac_id]['y']
-        $new_pacs[pac_id]['x'] = x
-        $new_pacs[pac_id]['y'] = y
-        $new_pacs[pac_id]['cd'] = ability_cooldown
+        pac = $pacs[pac_id]
+        pac.dead = false
+        pac.last_pos.x = pac.pos.x
+        pac.last_pos.y = pac.pos.y
+        pac.pos.x = x
+        pac.pos.y = y
+        pac.stl = speed_turns_left
+        pac.cd = ability_cooldown
+        $pacs[pac_id] = pac
       end
     end
     ############################################################
   end
-
-  ######################
-  $pacs = $new_pacs # update pacs with the alive ones
-  ######################
 
   visible_pellet_count = gets.to_i # all pellets in sight
   visible_pellet_count.times do
     # value: amount of points this pellet is worth
     x, y, value = gets.split(" ").collect {|x| x.to_i}
 
-    $pellets << { "x" => x, "y" => y, "v" => value }
-    $super_pellets << { "x" => x, "y" => y, "v" => value } if value == 10
+    pellet = Pellet.new(Position.new(x, y), value)
+    if pellet.value == 10
+      $super_pellets << pellet
+    else
+      $pellet << pellet
+    end
   end
     
   # Write an action using puts
