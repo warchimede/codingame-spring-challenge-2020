@@ -167,54 +167,56 @@ loop do
   unless $super_pellets.empty?
     high_val = $super_pellets.select do |hp| # choose only not targeted ones
       res = true
-      $pacs.each do |p_id, p_pos|
-        res = res and (hp['x'] != p_pos['dest_x'] or hp['y'] != p_pos['dest_y'])
+      $pacs.each do |id, pac|
+        res = res and (hp.pos.x != pac.dest.x or hp.pos.y != pac.dest.y)
       end
     end
 
     high_val.each do |hp| # choose the closest available pac
-      pacs = $pacs.select do |p_id, p_pos|
-        arrived? p_pos
+      pacs = $pacs.select do |id, pac|
+        pac.arrived?
       end
       unless pacs.empty?
         pac_id = pacs.keys[0]
-        current_dist = distance pacs[pac_id], hp
+        current_dist = distance pacs[pac_id].pos, hp.pos
         pacs.keys.each do |p_id|
-          hp_dist = distance pacs[p_id], hp
+          hp_dist = distance pacs[p_id].pos, hp.pos
           if hp_dist < current_dist
             pac_id = p_id
             current_dist = hp_dist
           end
         end
-        $pacs[pac_id]['dest_x'] = hp['x']
-        $pacs[pac_id]['dest_y'] = hp['y']
+        pac = $pacs[pac_id]
+        pac.dest.x = hp.pos.x
+        pac.dest.y = hp.pos.y
+        $pacs[pac_id] = pac
       end
     end
   end
 
-  arrived = $pacs.select do |p_id, pos|
-    arrived? pos
+  arrived = $pacs.select do |p_id, pac|
+    pac.arrived
   end
 
-  stuck = $pacs.select do |p_id, pos|
-    stuck? pos
+  stuck = $pacs.select do |p_id, pac|
+    pac.stuck?
   end
 
-  arrived.each do |pac_id, pos|
+  arrived.each do |pac_id, pac|
     # Stay if cannot move
-    dest = pos
+    dest = pac.pos
 
     if $pellets.empty?
       # No pellet in sight....
-      possible_pos = possible_positions pos
+      possible_pos = pac.possible_next_positions
 
       # filter other pacs positions
       if possible_pos.length > 1
         possible_pos = possible_pos.select do |p|
           res = true
-          $pacs.each do |p_pac_id, p_pos|
+          $pacs.each do |p_pac_id, p_pac|
             unless pac_id == p_pac_id
-              res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+              res = res and (p.x != p_pac.pos.x or p.y != p_pac.pos.y)
             end
           end
         end
@@ -223,43 +225,43 @@ loop do
       # remove last position
       if possible_pos.length > 1
         possible_pos = possible_pos.select do |p|
-          p['x'] != pos['last_x'] or p['y'] != pos['last_y']
+          p.x != p_pac.last_pos.x or p.y != p_pac.last_pos.y
         end
       end
 
       dest = possible_pos.sample unless possible_pos.empty?
     else
       # In case of pellets
-      dest = $pellets.sample
+      dest = $pellets.sample.pos
 
       # Better path: get the closest pellet in one direction  
-      current_dist = distance pos, dest
+      current_dist = distance pac.pos, dest
       $pellets.each do |pellet|
-        pellet_dist = distance pos, pellet
+        pellet_dist = distance pac.pos, pellet.pos
         if pellet_dist < current_dist
-          dest = pellet
+          dest = pellet.pos
           current_dist = pellet_dist
         end
       end
     end
-     
-    $pacs[pac_id]['dest_x'] = dest['x']
-    $pacs[pac_id]['dest_y'] = dest['y']
+    
+    pac.dest = dest
+    $pacs[pac_id] = pac
   end
 
-  stuck.each do |pac_id, pos|
+  stuck.each do |pac_id, pac|
     # Stay if cannot move
-    dest = pos
+    dest = pac.pos
 
-    possible_pos = possible_positions pos
+    possible_pos = pac.possible_next_positions
 
     # filter other pacs positions
     if possible_pos.length > 1
       possible_pos = possible_pos.select do |p|
         res = true
-        $pacs.each do |p_pac_id, p_pos|
+        $pacs.each do |p_pac_id, p_pac|
           unless pac_id == p_pac_id
-            res = res and (p['x'] != p_pos['x'] or p['y'] != p_pos['y'])
+            res = res and (p.x != p_pac.pos.x or p.y != p_pac.pos.y)
           end
         end
       end
@@ -268,14 +270,14 @@ loop do
     # remove last position
     if possible_pos.length > 1
       possible_pos = possible_pos.select do |p|
-        p['x'] != pos['last_x'] or p['y'] != pos['last_y']
+        p.x != pac.last_pos.x or p.y != pac.last_pos.x
       end
     end
 
     dest = possible_pos.sample unless possible_pos.empty?
 
-    $pacs[pac_id]['dest_x'] = dest['x']
-    $pacs[pac_id]['dest_y'] = dest['y']
+    pac.dest = dest
+    $pacs[pac_id] = pac
   end
     
   # Generate action
