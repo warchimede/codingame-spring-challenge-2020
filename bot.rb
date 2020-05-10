@@ -152,7 +152,7 @@ loop do
     if pellet.value == 10
       $super_pellets << pellet
     else
-      $pellet << pellet
+      $pellets << pellet
     end
   end
     
@@ -195,7 +195,7 @@ loop do
   end
 
   arrived = $pacs.select do |p_id, pac|
-    pac.arrived
+    pac.arrived?
   end
 
   stuck = $pacs.select do |p_id, pac|
