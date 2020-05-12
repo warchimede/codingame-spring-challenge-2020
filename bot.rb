@@ -208,7 +208,7 @@ loop do
 
     if $pellets.empty?
       # No pellet in sight....
-      possible_pos = pac.possible_next_positions
+      possible_pos = pac.possible_next_positions $Width, $Height, $Map
 
       # filter other pacs positions
       if possible_pos.length > 1
@@ -253,7 +253,7 @@ loop do
     # Stay if cannot move
     dest = pac.pos
 
-    possible_pos = pac.possible_next_positions
+    possible_pos = pac.possible_next_positions $Width, $Height, $Map
 
     # filter other pacs positions
     if possible_pos.length > 1
@@ -282,11 +282,11 @@ loop do
     
   # Generate action
   action = []
-  $pacs.each do |pac_id, pos|
-    if $pacs[pac_id]['cd'] == 0
+  $pacs.each do |pac_id, pac|
+    if $pacs[pac_id].cd == 0
       action << "SPEED #{pac_id}"
     else
-      action << "MOVE #{pac_id} #{pos['dest_x']} #{pos['dest_y']}"
+      action << "MOVE #{pac_id} #{pac.dest.x} #{pac.dest.y}"
     end
   end
   puts action.join('|')
