@@ -24,13 +24,13 @@ end
 # Pac
 class Pac
   attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
-  def initialize(id, type, mine, pos, last_pos, dest, stl, cd)
+  def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
     @mine = mine
     @pos = pos
-    @last_pos = last_pos
-    @dest = dest
+    @last_pos = Position.new(-1, -1)
+    @dest = Position.new(-1, -1)
     @stl = stl
     @cd = cd
     @dead = false
@@ -131,7 +131,7 @@ loop do
     if mine # TODO: also keep track of other pacs
       if $pacs[pac_id].nil?
         pos = Position.new(x, y)
-        pac = Pac.new(pac_id, type_id, mine, pos, pos, pos, speed_turns_left, ability_cooldown)
+        pac = Pac.new(pac_id, type_id, mine, pos, speed_turns_left, ability_cooldown)
         $pacs[pac_id] = pac
       else
         pac = $pacs[pac_id]
@@ -192,8 +192,7 @@ loop do
           end
         end
         pac = $pacs[pac_id]
-        pac.dest.x = hp.pos.x
-        pac.dest.y = hp.pos.y
+        pac.dest = hp.pos
         $pacs[pac_id] = pac
       end
     end
