@@ -11,8 +11,8 @@ $Scissors = "SCISSORS"
 class Position
   attr_accessor :x, :y
   def initialize(x, y)
-    @x = 0
-    @y = 0
+    @x = x
+    @y = y
   end
 end
 
@@ -93,7 +93,7 @@ def reset
   dead_pacs = {}
   $pacs.each do |id, pac|
     pac.dead = true
-    dead_pacs['id'] = pac
+    dead_pacs[id] = pac
   end
   $pacs = dead_pacs
 end
@@ -161,6 +161,9 @@ loop do
     
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################
+  
+  STDERR.puts "pellets: #{$pellets}"
+  STDERR.puts "super pellets: #{$super_pellets}"
   
   # PATH FINDING
   # High value pellets choose pacs
