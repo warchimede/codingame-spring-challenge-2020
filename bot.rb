@@ -23,7 +23,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :available, :dead
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -33,15 +33,16 @@ class Pac
     @dest = Position.new(-1, -1)
     @stl = stl
     @cd = cd
+    @available = true
     @dead = false
   end
 
   def arrived?
-    @pos.x == @dest.x and @pos.y == @dest.y
+    @pos.x == @dest.x and @pos.y == @dest.y and @available
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @available
   end
 
   def possible_next_positions(width, height, map)
@@ -89,15 +90,18 @@ $Map = map
 $pacs = {}
 $pellets = []
 $super_pellets = []
+$turn = 0
 #######################
 
 def reset
+  $turn += 1
   $pellets = []
   $super_pellets = []
   # consider all pacs are dead
   dead_pacs = {}
   $pacs.each do |id, pac|
     pac.dead = true
+    pac.available = true
     dead_pacs[id] = pac
   end
   $pacs = dead_pacs
@@ -178,14 +182,20 @@ loop do
 
     high_val.each do |hp| # choose the closest available pac
       pacs = $pacs.select do |id, pac|
-        pac.arrived?
+        pac.available and (pac.arrived? or $turn == 1) # first turn, all pacs ready for super pellets
       end
 
       unless pacs.empty?
         pac_id = pacs.keys[0]
         current_dist = distance pacs[pac_id].pos, hp.pos
+
+        log "#{current_dist}, (#{pacs[pac_id].pos.x},#{pacs[pac_id].pos.y}) (#{hp.pos.y},#{hp.pos.y})"
+
         pacs.keys.each do |p_id|
           hp_dist = distance pacs[p_id].pos, hp.pos
+
+          log "#{hp_dist}, (#{pacs[p_id].pos.x},#{pacs[p_id].pos.y}) (#{hp.pos.y},#{hp.pos.y})"
+
           if hp_dist < current_dist
             pac_id = p_id
             current_dist = hp_dist
@@ -193,6 +203,7 @@ loop do
         end
         pac = $pacs[pac_id]
         pac.dest = hp.pos
+        pac.available = false
         $pacs[pac_id] = pac
       end
     end
@@ -229,7 +240,7 @@ loop do
       # remove last position
       if possible_pos.length > 1
         possible_pos = possible_pos.select do |p|
-          p.x != p_pac.last_pos.x or p.y != p_pac.last_pos.y
+          p.x != pac.last_pos.x or p.y != pac.last_pos.y
         end
       end
 
@@ -250,6 +261,7 @@ loop do
     end
     
     pac.dest = dest
+    pac.available = false
     $pacs[pac_id] = pac
   end
 
@@ -281,6 +293,7 @@ loop do
     dest = possible_pos.sample unless possible_pos.empty?
 
     pac.dest = dest
+    pac.available = false
     $pacs[pac_id] = pac
   end
     
