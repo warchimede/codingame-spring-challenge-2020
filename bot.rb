@@ -2,6 +2,11 @@ STDOUT.sync = true # DO NOT REMOVE
 # Grab the pellets as fast as you can!
 
 ####################### MODEL
+# Debug
+def log(message)
+  STDERR.puts message
+end
+
 # Type
 $Rock = "ROCK"
 $Paper = "PAPER"
@@ -160,11 +165,7 @@ loop do
   # To debug: STDERR.puts "Debug messages..."
     
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
-  ############################################################
-  
-  STDERR.puts "pellets: #{$pellets}"
-  STDERR.puts "super pellets: #{$super_pellets}"
-  
+  ############################################################  
   # PATH FINDING
   # High value pellets choose pacs
   unless $super_pellets.empty?
@@ -179,6 +180,7 @@ loop do
       pacs = $pacs.select do |id, pac|
         pac.arrived?
       end
+
       unless pacs.empty?
         pac_id = pacs.keys[0]
         current_dist = distance pacs[pac_id].pos, hp.pos
