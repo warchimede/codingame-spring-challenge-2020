@@ -42,7 +42,7 @@ class Pac
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @available
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @available and @cd != 10
   end
 
   def possible_next_positions(width, height, map)
@@ -213,8 +213,17 @@ loop do
         $super_pellets.each do |sp|
           sp_dist = distance pac.pos, sp.pos
           if sp_dist < current_dist
-            current_dist = sp_dist
-            dest = sp.pos
+            # filter already targeted
+            res = true
+            $pacs.each do |p_pac_id, p_pac|
+              unless id == p_pac_id
+                res = res and (pac.dest.x != p_pac.dest.x or pac.dest.y != p_pac.dest.y)
+              end
+            end
+            if res
+              current_dist = sp_dist
+              dest = sp.pos
+            end
           end
         end
         pac.dest = dest
