@@ -23,7 +23,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :available, :dead
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -33,16 +33,15 @@ class Pac
     @dest = Position.new(-1, -1)
     @stl = stl
     @cd = cd
-    @available = true
     @dead = false
   end
 
   def arrived?
-    @pos.x == @dest.x and @pos.y == @dest.y and @available
+    @pos.x == @dest.x and @pos.y == @dest.y
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @available and @cd != 10
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @cd != 10
   end
 
   def possible_next_positions(width, height, map)
@@ -80,6 +79,78 @@ class Pac
         return $Rock
       end
     end
+  end
+
+  def move
+    "MOVE #{@id} #{@dest.x} #{@dest.y}"
+  end
+
+  def speed
+    "SPEED #{@id}"
+  end
+
+  def switch(type)
+    "SWITCH #{@id} #{type}"
+  end
+
+  def next_action(width, height, map, pacs, enemies, super_pellets, pellets)
+    if @cd == 0
+      enemies.each do |id, enemy|
+        dist = distance @pos, enemy.pos
+        if dist < 5
+          type = next_type enemy
+          unless type == @type
+            return switch type
+          end
+        end
+      end
+      return speed
+    end
+
+    if stuck?
+      dest = @pos
+      possible_pos = possible_next_positions(width, height, map)
+      dest = possible_pos.sample unless possible_pos.empty?
+      @dest = dest
+      return move
+    end
+
+    if arrived?
+      unless super_pellets.empty?
+        pellet = super_pellets.sample
+        dest = pellet.pos
+        current_dist = distance @pos, pellet.pos
+        super_pellets.each do |pellet|
+          p_dist = distance @pos, pellet.pos
+          if p_dist < current_dist
+            current_dist = p_dist
+            dest = pellet.pos
+          end
+        end
+        @dest = dest
+        return move
+      end
+
+      unless pellets.empty?
+        pellet = pellets.sample
+        dest = pellet.pos
+        current_dist = distance @pos, pellet.pos
+        pellets.each do |pellet|
+          p_dist = distance @pos, pellet.pos
+          if p_dist < current_dist
+            current_dist = p_dist
+            dest = pellet.pos
+          end
+        end
+        @dest = dest
+        return move
+      end
+
+      # WHAT TO DO ?
+
+    end
+    
+    return move
   end
 end
 
@@ -125,7 +196,6 @@ def reset
   dead_pacs = {}
   $pacs.each do |id, pac|
     pac.dead = true
-    pac.available = true
     dead_pacs[id] = pac
   end
   $pacs = dead_pacs
@@ -198,147 +268,9 @@ loop do
     
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################  
-  # PATH FINDING
-  # High value pellets first
-  unless $super_pellets.empty?
-    pacs = $pacs.select do |id, pac|
-      pac.available and (pac.arrived? or $turn == 1) # first turn, all pacs ready for super pellets
-    end
-
-    unless pacs.empty?
-      pacs.each do |id, pac|
-        sp = $super_pellets.sample
-        dest = sp.pos
-        current_dist = distance pac.pos, sp.pos
-        $super_pellets.each do |sp|
-          sp_dist = distance pac.pos, sp.pos
-          if sp_dist < current_dist
-            # filter already targeted
-            res = true
-            $pacs.each do |p_pac_id, p_pac|
-              unless id == p_pac_id
-                res = res and (pac.dest.x != p_pac.dest.x or pac.dest.y != p_pac.dest.y)
-              end
-            end
-            if res
-              current_dist = sp_dist
-              dest = sp.pos
-            end
-          end
-        end
-        pac.dest = dest
-        pac.available = false
-        $pacs[id] = pac
-      end
-    end
-  end
-
-  arrived = $pacs.select do |p_id, pac|
-    pac.arrived?
-  end
-
-  stuck = $pacs.select do |p_id, pac|
-    pac.stuck?
-  end
-
-  arrived.each do |pac_id, pac|
-    # Stay if cannot move
-    dest = pac.pos
-
-    if $pellets.empty?
-      # No pellet in sight....
-      possible_pos = pac.possible_next_positions $Width, $Height, $Map
-
-      # filter other pacs positions
-      if possible_pos.length > 1
-        possible_pos = possible_pos.select do |p|
-          res = true
-          $pacs.each do |p_pac_id, p_pac|
-            unless pac_id == p_pac_id
-              res = res and (p.x != p_pac.pos.x or p.y != p_pac.pos.y)
-            end
-          end
-        end
-      end
-
-      # remove last position
-      if possible_pos.length > 1
-        possible_pos = possible_pos.select do |p|
-          p.x != pac.last_pos.x or p.y != pac.last_pos.y
-        end
-      end
-
-      dest = possible_pos.sample unless possible_pos.empty?
-    else
-      # In case of pellets
-      dest = $pellets.sample.pos
-
-      # Better path: get the closest pellet in one direction  
-      current_dist = distance pac.pos, dest
-      $pellets.each do |pellet|
-        pellet_dist = distance pac.pos, pellet.pos
-        if pellet_dist < current_dist
-          dest = pellet.pos
-          current_dist = pellet_dist
-        end
-      end
-    end
-    
-    pac.dest = dest
-    pac.available = false
-    $pacs[pac_id] = pac
-  end
-
-  stuck.each do |pac_id, pac|
-    # Stay if cannot move
-    dest = pac.pos
-
-    possible_pos = pac.possible_next_positions $Width, $Height, $Map
-
-    # filter other pacs positions
-    if possible_pos.length > 1
-      possible_pos = possible_pos.select do |p|
-        res = true
-        $pacs.each do |p_pac_id, p_pac|
-          unless pac_id == p_pac_id
-            res = res and (p.x != p_pac.pos.x or p.y != p_pac.pos.y)
-          end
-        end
-      end
-    end
-
-    # remove last position
-    if possible_pos.length > 1
-      possible_pos = possible_pos.select do |p|
-        p.x != pac.last_pos.x or p.y != pac.last_pos.x
-      end
-    end
-
-    dest = possible_pos.sample unless possible_pos.empty?
-
-    pac.dest = dest
-    pac.available = false
-    $pacs[pac_id] = pac
-  end
-    
-  # Generate action
   action = []
   $pacs.each do |pac_id, pac|
-    act = "MOVE #{pac_id} #{pac.dest.x} #{pac.dest.y}"
-    if $pacs[pac_id].cd == 0
-      # act = "SPEED #{pac_id}" # try to speed
-      $enemies.each do |id, enemy| # but change type if enemy
-        dist = distance pac.pos, enemy.pos
-        if dist < 5
-          type = pac.next_type enemy
-          unless type == pac.type
-            act = "SWITCH #{pac_id} #{type}"
-            break
-          end
-        end
-      end
-    end
-    action << act
+    action << pac.next_action($Width, $Height, $Map, $pacs, $enemies, $super_pellets, $pellets)
   end
   puts action.join('|')
   ############################################################

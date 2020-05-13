@@ -1,9 +1,5 @@
 # TODO
-- better modelling
-- attribtue visible pellets to the pacs which can see them
-- pac choisit super pellet
-- A* pour choisir chemin quand on voit rien ?
-- aller random quand stuck ?
-
-
+- faire une boucle globale par pac
+  - fonction d'évaluation individuelle
+  - la sortie c'est l'action
 ### DEBUG logs
