@@ -135,32 +135,36 @@ class Pac
 
     if arrived?
       unless $super_pellets.empty?
-        pellet = $super_pellets.sample
-        dest = pellet.pos
-        current_dist = distance @pos, pellet.pos
+        chosen_pellet = $super_pellets.sample
+        dest = chosen_pellet.pos
+        current_dist = distance @pos, chosen_pellet.pos
         $super_pellets.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
             dest = pellet.pos
+            chosen_pellet = pellet
           end
         end
         @dest = dest
+        $super_pellets.delete(chosen_pellet)
         return move
       end
 
       unless $pellets.empty?
-        pellet = $pellets.sample
-        dest = pellet.pos
-        current_dist = distance @pos, pellet.pos
-        pellets.each do |pellet|
+        chosen_pellet = $pellets.sample
+        dest = chosen_pellet.pos
+        current_dist = distance @pos, chosen_pellet.pos
+        $pellets.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
             dest = pellet.pos
+            chosen_pellet = pellet
           end
         end
         @dest = dest
+        $pellets.delete(chosen_pellet)
         return move
       end
 
