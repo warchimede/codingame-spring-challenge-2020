@@ -97,7 +97,7 @@ class Pac
     if @cd == 0
       enemies.each do |id, enemy|
         dist = distance @pos, enemy.pos
-        if dist < 5
+        if dist < 7
           type = next_type enemy
           unless type == @type
             return switch type
@@ -147,7 +147,7 @@ class Pac
       end
 
       # WHAT TO DO ?
-
+      # pac goes stuck for now
     end
     
     return move
