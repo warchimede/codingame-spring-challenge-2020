@@ -71,7 +71,7 @@ class Pellet
 end
 
 def distance(p1, p2)
-  (p1.x - p2.x)**2 + (p1.y - p2.y)**2
+  (p1.x - p2.x).abs + (p1.y - p2.y).abs
 end
 
 #######################
@@ -173,14 +173,7 @@ loop do
   # PATH FINDING
   # High value pellets choose pacs
   unless $super_pellets.empty?
-    high_val = $super_pellets.select do |hp| # choose only not targeted ones
-      res = true
-      $pacs.each do |id, pac|
-        res = res and (hp.pos.x != pac.dest.x or hp.pos.y != pac.dest.y)
-      end
-    end
-
-    high_val.each do |hp| # choose the closest available pac
+    $super_pellets.each do |hp| # choose the closest available pac
       pacs = $pacs.select do |id, pac|
         pac.available and (pac.arrived? or $turn == 1) # first turn, all pacs ready for super pellets
       end
