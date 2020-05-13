@@ -199,28 +199,27 @@ loop do
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################  
   # PATH FINDING
-  # High value pellets choose pacs
+  # High value pellets first
   unless $super_pellets.empty?
-    $super_pellets.each do |hp| # choose the closest available pac
-      pacs = $pacs.select do |id, pac|
-        pac.available and (pac.arrived? or $turn == 1) # first turn, all pacs ready for super pellets
-      end
+    pacs = $pacs.select do |id, pac|
+      pac.available and (pac.arrived? or $turn == 1) # first turn, all pacs ready for super pellets
+    end
 
-      unless pacs.empty?
-        pac_id = pacs.keys[0]
-        current_dist = distance pacs[pac_id].pos, hp.pos
-        pacs.keys.each do |p_id|
-          hp_dist = distance pacs[p_id].pos, hp.pos
-          if hp_dist < current_dist
-            pac_id = p_id
-            current_dist = hp_dist
+    unless pacs.empty?
+      pacs.each do |id, pac|
+        sp = $super_pellets.sample
+        dest = sp.pos
+        current_dist = distance pac.pos, sp.pos
+        $super_pellets.each do |sp|
+          sp_dist = distance pac.pos, sp.pos
+          if sp_dist < current_dist
+            current_dist = sp_dist
+            dest = sp.pos
           end
         end
-
-        pac = $pacs[pac_id]
-        pac.dest = hp.pos
+        pac.dest = dest
         pac.available = false
-        $pacs[pac_id] = pac
+        $pacs[id] = pac
       end
     end
   end
@@ -316,20 +315,19 @@ loop do
   # Generate action
   action = []
   $pacs.each do |pac_id, pac|
+    act = "MOVE #{pac_id} #{pac.dest.x} #{pac.dest.y}"
     if $pacs[pac_id].cd == 0
-      act = "SPEED #{pac_id}" # try to speed
+      # act = "SPEED #{pac_id}" # try to speed
       $enemies.each do |id, enemy| # but change type if enemy
         dist = distance pac.pos, enemy.pos
         if dist < 5
           type = pac.next_type enemy
-          act = "SWITCH #{pac_id} #{type}"
+          act = "SWITCH #{pac_id} #{type}" unless type == pac.type
           break
         end
       end
-      action << act
-    else
-      action << "MOVE #{pac_id} #{pac.dest.x} #{pac.dest.y}"
     end
+    action << act
   end
   puts action.join('|')
   ############################################################

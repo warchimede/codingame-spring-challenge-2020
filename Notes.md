@@ -1,7 +1,9 @@
 # TODO
 - better modelling
 - attribtue visible pellets to the pacs which can see them
-- le pac le plus proche distance <5 de l'ennemi prend le type qui va bien
+- pac choisit super pellet
+- A* pour choisir chemin quand on voit rien ?
+- aller random quand stuck ?
 
 
 ### DEBUG logs
