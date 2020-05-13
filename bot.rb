@@ -113,7 +113,7 @@ class Pac
 
   def next_action
     if @cd == 0
-      $enemies.each do |id, enemy|
+      $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
         if dist < 7
           type = next_type enemy
@@ -271,7 +271,7 @@ loop do
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################  
   action = []
-  $pacs.each do |pac_id, pac|
+  $pacs.values.shuffle.each do |pac|
     action << pac.next_action
   end
   puts action.join('|')
