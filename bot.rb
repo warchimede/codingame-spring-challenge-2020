@@ -1,7 +1,6 @@
 STDOUT.sync = true # DO NOT REMOVE
 # Grab the pellets as fast as you can!
 
-####################### MODEL
 # Debug
 def log(message)
   STDERR.puts message
@@ -12,6 +11,25 @@ $Rock = "ROCK"
 $Paper = "PAPER"
 $Scissors = "SCISSORS"
 
+# Map
+# width: size of the grid
+# height: top left corner is (x=0, y=0)
+$Width, $Height = gets.split(" ").collect {|x| x.to_i}
+map = Array.new($Height, "#")
+(0...$Height).step do |y|
+    row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
+    map[y] = row.chars 
+end
+
+####################### Globals
+$Map = map
+$pacs = {}
+$enemies = {}
+$pellets = []
+$super_pellets = []
+$turn = 0
+
+####################### Models
 # Position
 class Position
   attr_accessor :x, :y
@@ -93,9 +111,9 @@ class Pac
     "SWITCH #{@id} #{type}"
   end
 
-  def next_action(width, height, map, pacs, enemies, super_pellets, pellets)
+  def next_action
     if @cd == 0
-      enemies.each do |id, enemy|
+      $enemies.each do |id, enemy|
         dist = distance @pos, enemy.pos
         if dist < 7
           type = next_type enemy
@@ -109,18 +127,18 @@ class Pac
 
     if stuck?
       dest = @pos
-      possible_pos = possible_next_positions(width, height, map)
+      possible_pos = possible_next_positions $Width, $Height, $Map
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
       return move
     end
 
     if arrived?
-      unless super_pellets.empty?
-        pellet = super_pellets.sample
+      unless $super_pellets.empty?
+        pellet = $super_pellets.sample
         dest = pellet.pos
         current_dist = distance @pos, pellet.pos
-        super_pellets.each do |pellet|
+        $super_pellets.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
@@ -131,8 +149,8 @@ class Pac
         return move
       end
 
-      unless pellets.empty?
-        pellet = pellets.sample
+      unless $pellets.empty?
+        pellet = $pellets.sample
         dest = pellet.pos
         current_dist = distance @pos, pellet.pos
         pellets.each do |pellet|
@@ -166,26 +184,6 @@ end
 def distance(p1, p2)
   (p1.x - p2.x).abs + (p1.y - p2.y).abs
 end
-
-#######################
-
-# width: size of the grid
-# height: top left corner is (x=0, y=0)
-$Width, $Height = gets.split(" ").collect {|x| x.to_i}
-map = Array.new($Height, "#")
-(0...$Height).step do |y|
-    row = gets.chomp # one line of the grid: space " " is floor, pound "#" is wall
-    map[y] = row.chars 
-end
-
-####################### Globals
-$Map = map
-$pacs = {}
-$enemies = {}
-$pellets = []
-$super_pellets = []
-$turn = 0
-#######################
 
 def reset
   $turn += 1
@@ -270,7 +268,7 @@ loop do
   ############################################################  
   action = []
   $pacs.each do |pac_id, pac|
-    action << pac.next_action($Width, $Height, $Map, $pacs, $enemies, $super_pellets, $pellets)
+    action << pac.next_action
   end
   puts action.join('|')
   ############################################################
