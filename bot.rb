@@ -60,14 +60,25 @@ class Pac
     }
   end
 
-  def next_type
-    case @type
-    when $Rock
-      return $Scissors
-    when $Paper
-      return $Rock
-    when $Scissors
-      return $Paper
+  def next_type(enemy)
+    if enemy.cd == 0 # try to brain by switching to counter of counter
+      case @type
+      when $Rock
+        return $Scissors
+      when $Paper
+        return $Rock
+      when $Scissors
+        return $Paper
+      end
+    else # enemy can't do shit, take advantage
+      case enemy.type
+      when $Rock
+        return $Paper
+      when $Paper
+        return $Scissors
+      when $Scissors
+        return $Rock
+      end
     end
   end
 end
@@ -310,7 +321,7 @@ loop do
       $enemies.each do |id, enemy| # but change type if enemy
         dist = distance pac.pos, enemy.pos
         if dist < 5
-          type = pac.next_type
+          type = pac.next_type enemy
           act = "SWITCH #{pac_id} #{type}"
           break
         end
