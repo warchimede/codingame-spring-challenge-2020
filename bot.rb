@@ -322,8 +322,10 @@ loop do
         dist = distance pac.pos, enemy.pos
         if dist < 5
           type = pac.next_type enemy
-          act = "SWITCH #{pac_id} #{type}" unless type == pac.type
-          break
+          unless type == pac.type
+            act = "SWITCH #{pac_id} #{type}"
+            break
+          end
         end
       end
     end
