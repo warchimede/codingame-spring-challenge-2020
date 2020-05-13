@@ -125,14 +125,6 @@ class Pac
       return speed
     end
 
-    if stuck?
-      dest = @pos
-      possible_pos = possible_next_positions $Width, $Height, $Map
-      dest = possible_pos.sample unless possible_pos.empty?
-      @dest = dest
-      return move
-    end
-
     if arrived?
       unless $super_pellets.empty?
         chosen_pellet = $super_pellets.sample
@@ -170,6 +162,14 @@ class Pac
 
       # WHAT TO DO ?
       # pac goes stuck for now
+    end
+
+    if stuck?
+      dest = @pos
+      possible_pos = possible_next_positions $Width, $Height, $Map
+      dest = possible_pos.sample unless possible_pos.empty?
+      @dest = dest
+      return move
     end
     
     return move
