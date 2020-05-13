@@ -61,13 +61,13 @@ class Pac
   end
 
   def next_type
-    case @type_id
+    case @type
     when $Rock
-      $Scissors
+      return $Scissors
     when $Paper
-      $Rock
+      return $Rock
     when $Scissors
-      $Paper
+      return $Paper
     end
   end
 end
