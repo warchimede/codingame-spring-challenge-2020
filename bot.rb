@@ -88,6 +88,7 @@ end
 ####################### Globals
 $Map = map
 $pacs = {}
+$enemies = {}
 $pellets = []
 $super_pellets = []
 $turn = 0
@@ -97,6 +98,7 @@ def reset
   $turn += 1
   $pellets = []
   $super_pellets = []
+  $enemies = {}
   # consider all pacs are dead
   dead_pacs = {}
   $pacs.each do |id, pac|
@@ -148,6 +150,10 @@ loop do
         pac.cd = ability_cooldown
         $pacs[pac_id] = pac
       end
+    else
+      pos = Position.new(x, y)
+      enemy = Pac.new(pac_id, type_id, mine, pos, speed_turns_left, ability_cooldown)
+      $enemies[pac_id] = enemy
     end
     ############################################################
   end
@@ -181,19 +187,14 @@ loop do
       unless pacs.empty?
         pac_id = pacs.keys[0]
         current_dist = distance pacs[pac_id].pos, hp.pos
-
-        log "#{current_dist}, (#{pacs[pac_id].pos.x},#{pacs[pac_id].pos.y}) (#{hp.pos.y},#{hp.pos.y})"
-
         pacs.keys.each do |p_id|
           hp_dist = distance pacs[p_id].pos, hp.pos
-
-          log "#{hp_dist}, (#{pacs[p_id].pos.x},#{pacs[p_id].pos.y}) (#{hp.pos.y},#{hp.pos.y})"
-
           if hp_dist < current_dist
             pac_id = p_id
             current_dist = hp_dist
           end
         end
+
         pac = $pacs[pac_id]
         pac.dest = hp.pos
         pac.available = false
