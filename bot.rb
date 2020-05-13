@@ -122,6 +122,7 @@ class Pac
           end
         end
       end
+      @dest = @pos # so that arrived instead of stuck for next round
       return speed
     end
 
@@ -162,6 +163,7 @@ class Pac
 
       # WHAT TO DO ?
       # pac goes stuck for now
+      # go to closest intersection ?
     end
 
     if stuck?
