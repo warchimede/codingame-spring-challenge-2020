@@ -59,6 +59,17 @@ class Pac
       map[y][x] != "#"
     }
   end
+
+  def next_type
+    case @type_id
+    when $Rock
+      $Scissors
+    when $Paper
+      $Rock
+    when $Scissors
+      $Paper
+    end
+  end
 end
 
 # Pellet
@@ -295,7 +306,16 @@ loop do
   action = []
   $pacs.each do |pac_id, pac|
     if $pacs[pac_id].cd == 0
-      action << "SPEED #{pac_id}"
+      act = "SPEED #{pac_id}" # try to speed
+      $enemies.each do |id, enemy| # but change type if enemy
+        dist = distance pac.pos, enemy.pos
+        if dist < 5
+          type = pac.next_type
+          act = "SWITCH #{pac_id} #{type}"
+          break
+        end
+      end
+      action << act
     else
       action << "MOVE #{pac_id} #{pac.dest.x} #{pac.dest.y}"
     end
