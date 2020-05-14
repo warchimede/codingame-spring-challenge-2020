@@ -190,6 +190,42 @@ def distance(p1, p2)
   (p1.x - p2.x).abs + (p1.y - p2.y).abs
 end
 
+def walls_between_y(p1, p2)
+  if p1.y != p2.y
+    return true
+  end
+
+  y = p1.y
+  x1 = [p1.x, p2.x].min
+  x2 = [p1.x, p2.x].max
+
+  for x in x1..x2 do
+    if $Map[y][x] == $Wall
+      return true
+    end
+  end
+
+  return false
+end
+
+def walls_between_x(p1, p2)
+  if p1.x != p2.x
+    return true
+  end
+
+  x = p1.x
+  y1 = [p1.y, p2.y].min
+  y2 = [p1.y, p2.y].max
+
+  for y in y1..y2 do
+    if $Map[y][x] == $Wall
+      return true
+    end
+  end
+
+  return false
+end
+
 def reset
   $super_pellets = []
   $enemies = {}
@@ -260,7 +296,9 @@ loop do
       $super_pellets << pellet
     else
       $pacs.values.each do |pac|
-        if pac.pos.x == x or pac.pos.y == y
+        if pac.pos.x == x and not walls_between_x(pac.pos, pellet.pos)
+          pac.pellets << pellet
+        elsif pac.pos.y == y and not walls_between_y(pac.pos, pellet.pos)
           pac.pellets << pellet
         end
       end
