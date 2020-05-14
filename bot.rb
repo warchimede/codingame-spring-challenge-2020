@@ -154,6 +154,7 @@ class Pac
       dest = @pos
       possible_pos = possible_next_positions @pos
       dest = possible_pos.sample unless possible_pos.empty?
+      @is_looking = false
       @dest = dest
       return move
     end
@@ -322,7 +323,8 @@ loop do
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################  
   action = []
-  $pacs.values.shuffle.each do |pac|
+  alive_pacs = $pacs.values.select { |p| not p.dead }
+  alive_pacs.shuffle.each do |pac|
     action << pac.next_action
   end
   puts action.join('|')
