@@ -47,8 +47,8 @@ class Pac
     @type = type
     @mine = mine
     @pos = pos
-    @last_pos = Position.new(-1, -1)
-    @dest = Position.new(-1, -1)
+    @last_pos = pos
+    @dest = pos
     @stl = stl
     @cd = cd
     @dead = false
@@ -59,28 +59,17 @@ class Pac
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @cd != 10
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y
   end
 
   def next_type(enemy)
-    if enemy.cd == 0 # try to brain by switching to counter of counter
-      case @type
-      when $Rock
-        return $Scissors
-      when $Paper
-        return $Rock
-      when $Scissors
-        return $Paper
-      end
-    else # enemy can't do shit, take advantage
-      case enemy.type
-      when $Rock
-        return $Paper
-      when $Paper
-        return $Scissors
-      when $Scissors
-        return $Rock
-      end
+    case enemy.type
+    when $Rock
+      return $Paper
+    when $Paper
+      return $Scissors
+    when $Scissors
+      return $Rock
     end
   end
 
@@ -97,18 +86,22 @@ class Pac
   end
 
   def next_action
-    if @cd == 0
+    if @cd == 0 and not $enemies.empty?
+      closest_enemy = $enemies.values.sample
+      current_dist = distance @pos, closest_enemy.pos
       $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
-        if dist < 7
-          type = next_type enemy
-          unless type == @type
-            return switch type
-          end
+        if dist < current_dist
+          current_dist = dist
+          closest_enemy = enemy
         end
       end
-      @dest = @pos # so that arrived instead of stuck for next round
-      return speed
+      if current_dist < 7
+        type = next_type closest_enemy
+        unless type == @type
+          return switch type
+        end
+      end
     end
 
     if arrived?
@@ -244,10 +237,8 @@ loop do
       else
         pac = $pacs[pac_id]
         pac.dead = false
-        pac.last_pos.x = pac.pos.x
-        pac.last_pos.y = pac.pos.y
-        pac.pos.x = x
-        pac.pos.y = y
+        pac.last_pos = Position.new(pac.pos.x, pac.pos.y)
+        pac.pos = Position.new(x, y)
         pac.stl = speed_turns_left
         pac.cd = ability_cooldown
         $pacs[pac_id] = pac
