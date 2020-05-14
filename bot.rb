@@ -27,7 +27,6 @@ end
 $Map = map
 $pacs = {}
 $enemies = {}
-# $pellets = []
 $super_pellets = []
 
 ####################### Models
@@ -88,8 +87,10 @@ class Pac
   end
 
   def next_action
-    if @cd == 0 and not $enemies.empty?
-      closest_enemy = $enemies.values.sample
+    log "#{@id}: #{@pellets.length}"
+
+    if @cd == 0 and (not $enemies.empty?)
+      closest_enemy = $enemies.values[0]
       current_dist = distance @pos, closest_enemy.pos
       $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
