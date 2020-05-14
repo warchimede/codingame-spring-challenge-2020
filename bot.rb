@@ -62,21 +62,6 @@ class Pac
     @pos.x == @last_pos.x and @pos.y == @last_pos.y and @cd != 10
   end
 
-  def possible_next_positions(width, height, map)
-    [ # all possible directions
-      Position.new(@pos.x+1, @pos.y),
-      Position.new(@pos.x, @pos.y+1),
-      Position.new(@pos.x-1, @pos.y),
-      Position.new(@pos.x, @pos.y-1)
-    ].select { |p| # stay in the map
-      p.x >= 0 and p.x < width and p.y >= 0 and p.y < height
-    }.select { |p| # filter walls
-      y = p.y
-      x = p.x
-      map[y][x] != "#"
-    }
-  end
-
   def next_type(enemy)
     if enemy.cd == 0 # try to brain by switching to counter of counter
       case @type
@@ -148,7 +133,7 @@ class Pac
         chosen_pellet = $pellets.sample
         dest = chosen_pellet.pos
         current_dist = distance @pos, chosen_pellet.pos
-        $pellets.each do |pellet|
+        $pellets.shuffle.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
@@ -161,14 +146,14 @@ class Pac
         return move
       end
 
-      # WHAT TO DO ?
-      # pac goes stuck for now
-      # go to closest intersection ?
+      # Go see further
+
+
     end
 
     if stuck?
       dest = @pos
-      possible_pos = possible_next_positions $Width, $Height, $Map
+      possible_pos = possible_next_positions @pos, $Width, $Height, $Map
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
       return move
@@ -185,6 +170,21 @@ class Pellet
     @pos = pos
     @value = value
   end
+end
+
+def possible_next_positions(pos, width, height, map)
+  [ # all possible directions
+    Position.new(pos.x+1, pos.y),
+    Position.new(pos.x, pos.y+1),
+    Position.new(pos.x-1, pos.y),
+    Position.new(pos.x, pos.y-1)
+  ].select { |p| # stay in the map
+    p.x >= 0 and p.x < width and p.y >= 0 and p.y < height
+  }.select { |p| # filter walls
+    y = p.y
+    x = p.x
+    map[y][x] != "#"
+  }
 end
 
 def distance(p1, p2)
