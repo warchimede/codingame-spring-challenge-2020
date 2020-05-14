@@ -12,6 +12,8 @@ $Paper = "PAPER"
 $Scissors = "SCISSORS"
 
 # Map
+$Wall = "#"
+$Space = " "
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
@@ -25,9 +27,8 @@ end
 $Map = map
 $pacs = {}
 $enemies = {}
-$pellets = []
+# $pellets = []
 $super_pellets = []
-$turn = 0
 
 ####################### Models
 # Position
@@ -41,7 +42,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -52,6 +53,7 @@ class Pac
     @stl = stl
     @cd = cd
     @dead = false
+    @pellets = []
   end
 
   def arrived?
@@ -105,6 +107,11 @@ class Pac
     end
 
     if arrived?
+      # clean pellets
+      @pellets = @pellets.select do |pellet|
+        pellet.pos.x != @pos.x or pellet.pos.y != @pos.y
+      end
+
       unless $super_pellets.empty?
         chosen_pellet = $super_pellets.sample
         dest = chosen_pellet.pos
@@ -122,11 +129,11 @@ class Pac
         return move
       end
 
-      unless $pellets.empty?
-        chosen_pellet = $pellets.sample
+      unless @pellets.empty?
+        chosen_pellet = @pellets[0]
         dest = chosen_pellet.pos
         current_dist = distance @pos, chosen_pellet.pos
-        $pellets.shuffle.each do |pellet|
+        @pellets.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
@@ -135,7 +142,6 @@ class Pac
           end
         end
         @dest = dest
-        $pellets.delete(chosen_pellet)
         return move
       end
 
@@ -182,7 +188,7 @@ def possible_next_positions(pos, width, height, map)
   }.select { |p| # filter walls
     y = p.y
     x = p.x
-    map[y][x] != "#"
+    map[y][x] != $Wall
   }
 end
 
@@ -191,8 +197,6 @@ def distance(p1, p2)
 end
 
 def reset
-  $turn += 1
-  $pellets = []
   $super_pellets = []
   $enemies = {}
   # consider all pacs are dead
@@ -260,7 +264,11 @@ loop do
     if pellet.value == 10
       $super_pellets << pellet
     else
-      $pellets << pellet
+      $pacs.values.each do |pac|
+        if pac.pos.x == x or pac.pos.y == y
+          pac.pellets << pellet
+        end
+      end
     end
   end
     
