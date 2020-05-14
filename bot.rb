@@ -12,6 +12,8 @@ $Paper = "PAPER"
 $Scissors = "SCISSORS"
 
 # Map
+$Wall = "#"
+$Space = " "
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
@@ -25,9 +27,7 @@ end
 $Map = map
 $pacs = {}
 $enemies = {}
-$pellets = []
 $super_pellets = []
-$turn = 0
 
 ####################### Models
 # Position
@@ -41,17 +41,18 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
     @mine = mine
     @pos = pos
-    @last_pos = Position.new(-1, -1)
-    @dest = Position.new(-1, -1)
+    @last_pos = pos
+    @dest = pos
     @stl = stl
     @cd = cd
     @dead = false
+    @pellets = []
   end
 
   def arrived?
@@ -59,28 +60,17 @@ class Pac
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @cd != 10
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y
   end
 
   def next_type(enemy)
-    if enemy.cd == 0 # try to brain by switching to counter of counter
-      case @type
-      when $Rock
-        return $Scissors
-      when $Paper
-        return $Rock
-      when $Scissors
-        return $Paper
-      end
-    else # enemy can't do shit, take advantage
-      case enemy.type
-      when $Rock
-        return $Paper
-      when $Paper
-        return $Scissors
-      when $Scissors
-        return $Rock
-      end
+    case enemy.type
+    when $Rock
+      return $Paper
+    when $Paper
+      return $Scissors
+    when $Scissors
+      return $Rock
     end
   end
 
@@ -97,21 +87,32 @@ class Pac
   end
 
   def next_action
-    if @cd == 0
+    log "#{@id}: #{@pellets.length}"
+
+    if @cd == 0 and (not $enemies.empty?)
+      closest_enemy = $enemies.values[0]
+      current_dist = distance @pos, closest_enemy.pos
       $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
-        if dist < 7
-          type = next_type enemy
-          unless type == @type
-            return switch type
-          end
+        if dist < current_dist
+          current_dist = dist
+          closest_enemy = enemy
         end
       end
-      @dest = @pos # so that arrived instead of stuck for next round
-      return speed
+      if current_dist < 7
+        type = next_type closest_enemy
+        unless type == @type
+          return switch type
+        end
+      end
     end
 
     if arrived?
+      # clean pellets
+      @pellets = @pellets.select do |pellet|
+        pellet.pos.x != @pos.x or pellet.pos.y != @pos.y
+      end
+
       unless $super_pellets.empty?
         chosen_pellet = $super_pellets.sample
         dest = chosen_pellet.pos
@@ -129,11 +130,11 @@ class Pac
         return move
       end
 
-      unless $pellets.empty?
-        chosen_pellet = $pellets.sample
+      unless @pellets.empty?
+        chosen_pellet = @pellets[0]
         dest = chosen_pellet.pos
         current_dist = distance @pos, chosen_pellet.pos
-        $pellets.shuffle.each do |pellet|
+        @pellets.each do |pellet|
           p_dist = distance @pos, pellet.pos
           if p_dist < current_dist
             current_dist = p_dist
@@ -142,7 +143,6 @@ class Pac
           end
         end
         @dest = dest
-        $pellets.delete(chosen_pellet)
         return move
       end
 
@@ -189,7 +189,7 @@ def possible_next_positions(pos, width, height, map)
   }.select { |p| # filter walls
     y = p.y
     x = p.x
-    map[y][x] != "#"
+    map[y][x] != $Wall
   }
 end
 
@@ -198,8 +198,6 @@ def distance(p1, p2)
 end
 
 def reset
-  $turn += 1
-  $pellets = []
   $super_pellets = []
   $enemies = {}
   # consider all pacs are dead
@@ -244,10 +242,8 @@ loop do
       else
         pac = $pacs[pac_id]
         pac.dead = false
-        pac.last_pos.x = pac.pos.x
-        pac.last_pos.y = pac.pos.y
-        pac.pos.x = x
-        pac.pos.y = y
+        pac.last_pos = Position.new(pac.pos.x, pac.pos.y)
+        pac.pos = Position.new(x, y)
         pac.stl = speed_turns_left
         pac.cd = ability_cooldown
         $pacs[pac_id] = pac
@@ -269,7 +265,11 @@ loop do
     if pellet.value == 10
       $super_pellets << pellet
     else
-      $pellets << pellet
+      $pacs.values.each do |pac|
+        if pac.pos.x == x or pac.pos.y == y
+          pac.pellets << pellet
+        end
+      end
     end
   end
     
