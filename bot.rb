@@ -88,8 +88,6 @@ class Pac
   end
 
   def next_action
-    log "#{@id}: #{@pellets.length}"
-
     if @cd == 0 and (not $enemies.empty?)
       closest_enemy = $enemies.values[0]
       current_dist = distance @pos, closest_enemy.pos
@@ -145,15 +143,11 @@ class Pac
       end
 
       # Go see further
-      @is_looking = true
-      possible_pos = possible_next_positions @pos
-      $Width.times do
-        pos = possible_pos.sample
-        possible_pos = possible_next_positions pos
+      unless @is_looking
+        @is_looking = true
+        @dest = random_valid_pos
+        return move
       end
-
-      @dest = possible_pos.sample
-      return move
     end
 
     if stuck?
@@ -228,6 +222,19 @@ def walls_between_x(p1, p2)
   end
 
   return false
+end
+
+def random_valid_pos
+  y = rand $Height
+  x = rand $Width
+  while $Map[y][x] == $Wall do
+    y = rand $Height
+    x = rand $Width
+  end
+
+  log "#{x} #{y}"
+
+  return Position.new(x, y)
 end
 
 def reset
