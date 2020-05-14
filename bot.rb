@@ -142,10 +142,10 @@ class Pac
       end
 
       # Go see further
-      possible_pos = possible_next_positions @pos, $Width, $Height, $Map
+      possible_pos = possible_next_positions @pos
       ($Width/2).times do
         pos = possible_pos.sample
-        possible_pos = possible_next_positions pos, $Width, $Height, $Map
+        possible_pos = possible_next_positions pos
       end
 
       @dest = possible_pos.sample
@@ -154,7 +154,7 @@ class Pac
 
     if stuck?
       dest = @pos
-      possible_pos = possible_next_positions @pos, $Width, $Height, $Map
+      possible_pos = possible_next_positions @pos
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
       return move
@@ -173,18 +173,16 @@ class Pellet
   end
 end
 
-def possible_next_positions(pos, width, height, map)
+def possible_next_positions(pos)
   [ # all possible directions
     Position.new(pos.x+1, pos.y),
     Position.new(pos.x, pos.y+1),
     Position.new(pos.x-1, pos.y),
     Position.new(pos.x, pos.y-1)
   ].select { |p| # stay in the map
-    p.x >= 0 and p.x < width and p.y >= 0 and p.y < height
+    p.x >= 0 and p.x < $Width and p.y >= 0 and p.y < $Height
   }.select { |p| # filter walls
-    y = p.y
-    x = p.x
-    map[y][x] != $Wall
+    $Map[p.y][p.x] != $Wall
   }
 end
 
