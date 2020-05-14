@@ -41,7 +41,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets, :is_looking
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -53,6 +53,7 @@ class Pac
     @cd = cd
     @dead = false
     @pellets = []
+    @is_looking = false
   end
 
   def arrived?
@@ -107,7 +108,7 @@ class Pac
       end
     end
 
-    if arrived?
+    if arrived? or is_looking
       unless $super_pellets.empty?
         chosen_pellet = $super_pellets.sample
         dest = chosen_pellet.pos
@@ -120,6 +121,7 @@ class Pac
             chosen_pellet = pellet
           end
         end
+        @is_looking = false
         @dest = dest
         $super_pellets.delete(chosen_pellet)
         return move
@@ -137,13 +139,15 @@ class Pac
             chosen_pellet = pellet
           end
         end
+        @is_looking = false
         @dest = dest
         return move
       end
 
       # Go see further
+      @is_looking = true
       possible_pos = possible_next_positions @pos
-      ($Width/2).times do
+      $Width.times do
         pos = possible_pos.sample
         possible_pos = possible_next_positions pos
       end
