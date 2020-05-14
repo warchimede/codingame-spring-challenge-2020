@@ -147,8 +147,14 @@ class Pac
       end
 
       # Go see further
+      possible_pos = possible_next_positions @pos, $Width, $Height, $Map
+      ($Width/2).times do
+        pos = possible_pos.sample
+        possible_pos = possible_next_positions pos, $Width, $Height, $Map
+      end
 
-
+      @dest = possible_pos.sample
+      return move
     end
 
     if stuck?
