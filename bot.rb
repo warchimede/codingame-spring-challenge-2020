@@ -108,11 +108,6 @@ class Pac
     end
 
     if arrived?
-      # clean pellets
-      @pellets = @pellets.select do |pellet|
-        pellet.pos.x != @pos.x or pellet.pos.y != @pos.y
-      end
-
       unless $super_pellets.empty?
         chosen_pellet = $super_pellets.sample
         dest = chosen_pellet.pos
@@ -203,6 +198,7 @@ def reset
   # consider all pacs are dead
   dead_pacs = {}
   $pacs.each do |id, pac|
+    pac.pellets = []
     pac.dead = true
     dead_pacs[id] = pac
   end
