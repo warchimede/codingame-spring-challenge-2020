@@ -224,9 +224,7 @@ def random_valid_pos
     y = rand $Height
     x = rand $Width
   end
-
-  log "#{x} #{y}"
-
+  
   return Position.new(x, y)
 end
 
