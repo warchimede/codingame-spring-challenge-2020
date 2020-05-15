@@ -126,6 +126,9 @@ class Pac
     end
     @dest = dest
     $super_pellets.delete(chosen_pellet) # prevents convergence
+
+    log "#{@id} super pellet #{@dest.x} #{@dest.y}"
+
     return move
   end
 
@@ -149,7 +152,9 @@ class Pac
         possible_pos = possible_next_positions @pos
         dest = possible_pos.sample unless possible_pos.empty?
         @dest = dest
+        log "#{@id} pellet stuck"
       end
+      log "#{@id} pellet #{@dest.x} #{@dest.y}"
       return move
     end
 
@@ -158,14 +163,18 @@ class Pac
       possible_pos = possible_next_positions @pos
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
+
+      log "#{@id} stuck #{@dest.x} #{@dest.y}"
       return move
     end
     
     # Go see further
     if arrived?
       @dest = random_valid_pos
+      log "#{@id} go further #{@dest.x} #{@dest.y}"
     end
 
+    log "#{@id} advance #{@dest.x} #{@dest.y}"
     return move
   end
 end
