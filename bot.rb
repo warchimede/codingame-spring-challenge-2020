@@ -188,6 +188,46 @@ class Pellet
   end
 end
 
+# Tinder match
+class Match
+  attr_accessor :pac, :pellet, :dist
+  def initialize(pac, pellet)
+    @pac = pac
+    @pellet = pellet
+    @dist = distance pac.pos, pellet.pos
+  end
+end
+
+def find_love(pacs)
+  if $super_pellets.empty?
+    return
+  end
+
+  matches = []
+  $super_pellets.each do |pellet|
+    pacs.each do |pac|
+      matches << Match.new(pac, pellet)
+  end
+
+  best_matches = []
+  while (best_matches.length != $super_pellets.length) or (matches.length > 0) do
+    match = matches.reduce do |best, current|
+      [best.dist, current.dist].min
+    end
+    best_matches << match
+    matches = matches.select do |m|
+      m.pac.id != match.pac.id
+    end
+  end
+
+  best_matches.each do |bm|
+    pac = $pacs[bm.pac.id] # dunno wether reference or copy so...
+    pac.dest = bm.pellet.pos
+    $pacs[bm.pac.id] = pac
+    $actions[bm.pac.id] = pac.move
+  end
+end
+
 def possible_next_positions(pos)
   [ # all possible directions
     Position.new(pos.x+1, pos.y),
@@ -339,7 +379,6 @@ loop do
     end
   end
     
-
   ############################################################  
   alive_pacs = $pacs.values.select { |p| not p.dead }
 
@@ -352,13 +391,15 @@ loop do
   # filter pacs left without action
   available_pacs = available alive_pacs
 
-  available_pacs.each do |pac|
-    act = pac.attribute_super_pellets_or_nil
-    $actions[pac.id] = act unless act.nil?
-  end
+  # available_pacs.each do |pac|
+  #   act = pac.attribute_super_pellets_or_nil
+  #   $actions[pac.id] = act unless act.nil?
+  # end
   
-  # again
-  available_pacs = available alive_pacs
+  # # again
+  # available_pacs = available alive_pacs
+
+  find_love available_pacs
 
   available_pacs.each do |pac|
     $actions[pac.id] = pac.next_action
