@@ -86,9 +86,12 @@ class Pac
     "SWITCH #{@id} #{type}"
   end
 
-  def next_action
-    if @cd == 0 and (not $enemies.empty?)
-      closest_enemy = $enemies.values[0]
+  def type_action_or_nil
+    if @cd != 0 or $enemies.empty?
+      return nil
+    end
+
+    closest_enemy = $enemies.values[0]
       current_dist = distance @pos, closest_enemy.pos
       $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
@@ -103,25 +106,33 @@ class Pac
           return switch type
         end
       end
+  end
+
+  def attribute_super_pellets_or_nil
+    if $super_pellets.empty?
+      return nil
     end
 
-    unless $super_pellets.empty?
-      chosen_pellet = $super_pellets.sample
-      dest = chosen_pellet.pos
-      current_dist = distance @pos, chosen_pellet.pos
-      $super_pellets.each do |pellet|
-        p_dist = distance @pos, pellet.pos
-        if p_dist < current_dist
-          current_dist = p_dist
-          dest = pellet.pos
-          chosen_pellet = pellet
-        end
+    chosen_pellet = $super_pellets.sample
+    dest = chosen_pellet.pos
+    current_dist = distance @pos, chosen_pellet.pos
+    $super_pellets.each do |pellet|
+      p_dist = distance @pos, pellet.pos
+      if p_dist < current_dist
+        current_dist = p_dist
+        dest = pellet.pos
+        chosen_pellet = pellet
       end
-      @dest = dest
-      $super_pellets.delete(chosen_pellet)
-      return move
     end
+    @dest = dest
+    $super_pellets.delete(chosen_pellet) # prevents convergence
 
+    log "#{@id} super pellet #{@dest.x} #{@dest.y}"
+
+    return move
+  end
+
+  def next_action
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
       dest = chosen_pellet.pos
@@ -135,6 +146,15 @@ class Pac
         end
       end
       @dest = dest
+      
+      if stuck? # do not be stubborn when stuck
+        dest = @pos
+        possible_pos = possible_next_positions @pos
+        dest = possible_pos.sample unless possible_pos.empty?
+        @dest = dest
+        log "#{@id} pellet stuck"
+      end
+      log "#{@id} pellet #{@dest.x} #{@dest.y}"
       return move
     end
 
@@ -143,14 +163,18 @@ class Pac
       possible_pos = possible_next_positions @pos
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
+
+      log "#{@id} stuck #{@dest.x} #{@dest.y}"
       return move
     end
     
     # Go see further
     if arrived?
       @dest = random_valid_pos
+      log "#{@id} go further #{@dest.x} #{@dest.y}"
     end
 
+    log "#{@id} advance #{@dest.x} #{@dest.y}"
     return move
   end
 end
@@ -224,8 +248,15 @@ def random_valid_pos
     y = rand $Height
     x = rand $Width
   end
-  
+
   return Position.new(x, y)
+end
+
+def available(pacs)
+  # filter pacs left without action
+  return pacs.select do |pac|
+    not $actions.keys.include? pac.id
+  end
 end
 
 def reset
@@ -311,7 +342,25 @@ loop do
 
   ############################################################  
   alive_pacs = $pacs.values.select { |p| not p.dead }
+
+  # type actions
   alive_pacs.each do |pac|
+    act = pac.type_action_or_nil
+    $actions[pac.id] = act unless act.nil?
+  end
+
+  # filter pacs left without action
+  available_pacs = available alive_pacs
+
+  available_pacs.each do |pac|
+    act = pac.attribute_super_pellets_or_nil
+    $actions[pac.id] = act unless act.nil?
+  end
+  
+  # again
+  available_pacs = available alive_pacs
+
+  available_pacs.each do |pac|
     $actions[pac.id] = pac.next_action
   end
   puts $actions.values.join('|')
