@@ -269,7 +269,7 @@ loop do
     ability_cooldown = ability_cooldown.to_i
 
     ############################################################
-    if mine # TODO: also keep track of other pacs
+    if mine
       if $pacs[pac_id].nil?
         pos = Position.new(x, y)
         pac = Pac.new(pac_id, type_id, mine, pos, speed_turns_left, ability_cooldown)
@@ -310,10 +310,7 @@ loop do
     end
   end
     
-  # Write an action using puts
-  # To debug: STDERR.puts "Debug messages..."
-    
-  # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
+
   ############################################################  
   alive_pacs = $pacs.values.select { |p| not p.dead }
   alive_pacs.each do |pac|
