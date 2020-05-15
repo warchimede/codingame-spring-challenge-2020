@@ -125,7 +125,7 @@ class Pac
       end
     end
     @dest = dest
-    $super_pellets.delete(chosen_pellet)
+    $super_pellets.delete(chosen_pellet) # prevents convergence
     return move
   end
 
@@ -143,7 +143,7 @@ class Pac
         end
       end
       @dest = dest
-      return move
+      # do not return move to check if stuck
     end
 
     if stuck?
