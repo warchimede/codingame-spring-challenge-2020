@@ -207,6 +207,7 @@ def find_love(pacs)
   $super_pellets.each do |pellet|
     pacs.each do |pac|
       matches << Match.new(pac, pellet)
+    end
   end
 
   best_matches = []
@@ -396,10 +397,10 @@ loop do
   #   $actions[pac.id] = act unless act.nil?
   # end
   
-  # # again
-  # available_pacs = available alive_pacs
-
   find_love available_pacs
+
+  # again
+  available_pacs = available alive_pacs
 
   available_pacs.each do |pac|
     $actions[pac.id] = pac.next_action
