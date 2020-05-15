@@ -108,42 +108,28 @@ class Pac
       end
   end
 
-  def next_action
-    # if @cd == 0 and (not $enemies.empty?)
-    #   closest_enemy = $enemies.values[0]
-    #   current_dist = distance @pos, closest_enemy.pos
-    #   $enemies.values.each do |enemy|
-    #     dist = distance @pos, enemy.pos
-    #     if dist < current_dist
-    #       current_dist = dist
-    #       closest_enemy = enemy
-    #     end
-    #   end
-    #   if current_dist < 3
-    #     type = next_type closest_enemy
-    #     unless type == @type
-    #       return switch type
-    #     end
-    #   end
-    # end
-
-    unless $super_pellets.empty?
-      chosen_pellet = $super_pellets.sample
-      dest = chosen_pellet.pos
-      current_dist = distance @pos, chosen_pellet.pos
-      $super_pellets.each do |pellet|
-        p_dist = distance @pos, pellet.pos
-        if p_dist < current_dist
-          current_dist = p_dist
-          dest = pellet.pos
-          chosen_pellet = pellet
-        end
-      end
-      @dest = dest
-      $super_pellets.delete(chosen_pellet)
-      return move
+  def attribute_super_pellets_or_nil
+    if $super_pellets.empty?
+      return nil
     end
 
+    chosen_pellet = $super_pellets.sample
+    dest = chosen_pellet.pos
+    current_dist = distance @pos, chosen_pellet.pos
+    $super_pellets.each do |pellet|
+      p_dist = distance @pos, pellet.pos
+      if p_dist < current_dist
+        current_dist = p_dist
+        dest = pellet.pos
+        chosen_pellet = pellet
+      end
+    end
+    @dest = dest
+    $super_pellets.delete(chosen_pellet)
+    return move
+  end
+
+  def next_action
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
       dest = chosen_pellet.pos
@@ -250,6 +236,13 @@ def random_valid_pos
   return Position.new(x, y)
 end
 
+def available(pacs)
+  # filter pacs left without action
+  return pacs.select do |pac|
+    not $actions.keys.include? pac.id
+  end
+end
+
 def reset
   $actions = {}
   $super_pellets = []
@@ -340,7 +333,18 @@ loop do
     $actions[pac.id] = act unless act.nil?
   end
 
-  alive_pacs.each do |pac|
+  # filter pacs left without action
+  available_pacs = available alive_pacs
+
+  available_pacs.each do |pac|
+    act = pac.attribute_super_pellets_or_nil
+    $actions[pac.id] = act unless act.nil?
+  end
+  
+  # again
+  available_pacs = available alive_pacs
+
+  available_pacs.each do |pac|
     $actions[pac.id] = pac.next_action
   end
   puts $actions.values.join('|')
