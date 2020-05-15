@@ -41,7 +41,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets, :is_looking
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -53,7 +53,6 @@ class Pac
     @cd = cd
     @dead = false
     @pellets = []
-    @is_looking = false
   end
 
   def arrived?
@@ -106,59 +105,52 @@ class Pac
       end
     end
 
-    if arrived? or is_looking
-      unless $super_pellets.empty?
-        chosen_pellet = $super_pellets.sample
-        dest = chosen_pellet.pos
-        current_dist = distance @pos, chosen_pellet.pos
-        $super_pellets.each do |pellet|
-          p_dist = distance @pos, pellet.pos
-          if p_dist < current_dist
-            current_dist = p_dist
-            dest = pellet.pos
-            chosen_pellet = pellet
-          end
+    unless $super_pellets.empty?
+      chosen_pellet = $super_pellets.sample
+      dest = chosen_pellet.pos
+      current_dist = distance @pos, chosen_pellet.pos
+      $super_pellets.each do |pellet|
+        p_dist = distance @pos, pellet.pos
+        if p_dist < current_dist
+          current_dist = p_dist
+          dest = pellet.pos
+          chosen_pellet = pellet
         end
-        @is_looking = false
-        @dest = dest
-        $super_pellets.delete(chosen_pellet)
-        return move
       end
+      @dest = dest
+      $super_pellets.delete(chosen_pellet)
+      return move
+    end
 
-      unless @pellets.empty?
-        chosen_pellet = @pellets[0]
-        dest = chosen_pellet.pos
-        current_dist = distance @pos, chosen_pellet.pos
-        @pellets.each do |pellet|
-          p_dist = distance @pos, pellet.pos
-          if p_dist < current_dist
-            current_dist = p_dist
-            dest = pellet.pos
-            chosen_pellet = pellet
-          end
+    unless @pellets.empty?
+      chosen_pellet = @pellets[0]
+      dest = chosen_pellet.pos
+      current_dist = distance @pos, chosen_pellet.pos
+      @pellets.each do |pellet|
+        p_dist = distance @pos, pellet.pos
+        if p_dist < current_dist
+          current_dist = p_dist
+          dest = pellet.pos
+          chosen_pellet = pellet
         end
-        @is_looking = false
-        @dest = dest
-        return move
       end
-
-      # Go see further
-      unless @is_looking
-        @is_looking = true
-        @dest = random_valid_pos
-        return move
-      end
+      @dest = dest
+      return move
     end
 
     if stuck?
       dest = @pos
       possible_pos = possible_next_positions @pos
       dest = possible_pos.sample unless possible_pos.empty?
-      @is_looking = false
       @dest = dest
       return move
     end
     
+    # Go see further
+    if arrived?
+      @dest = random_valid_pos
+    end
+
     return move
   end
 end
@@ -324,7 +316,7 @@ loop do
   ############################################################  
   action = []
   alive_pacs = $pacs.values.select { |p| not p.dead }
-  alive_pacs.shuffle.each do |pac|
+  alive_pacs.each do |pac|
     action << pac.next_action
   end
   puts action.join('|')
