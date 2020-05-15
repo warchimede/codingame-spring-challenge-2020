@@ -86,9 +86,12 @@ class Pac
     "SWITCH #{@id} #{type}"
   end
 
-  def next_action
-    if @cd == 0 and (not $enemies.empty?)
-      closest_enemy = $enemies.values[0]
+  def type_action_or_nil
+    if @cd != 0 or $enemies.empty?
+      return nil
+    end
+
+    closest_enemy = $enemies.values[0]
       current_dist = distance @pos, closest_enemy.pos
       $enemies.values.each do |enemy|
         dist = distance @pos, enemy.pos
@@ -103,7 +106,26 @@ class Pac
           return switch type
         end
       end
-    end
+  end
+
+  def next_action
+    # if @cd == 0 and (not $enemies.empty?)
+    #   closest_enemy = $enemies.values[0]
+    #   current_dist = distance @pos, closest_enemy.pos
+    #   $enemies.values.each do |enemy|
+    #     dist = distance @pos, enemy.pos
+    #     if dist < current_dist
+    #       current_dist = dist
+    #       closest_enemy = enemy
+    #     end
+    #   end
+    #   if current_dist < 3
+    #     type = next_type closest_enemy
+    #     unless type == @type
+    #       return switch type
+    #     end
+    #   end
+    # end
 
     unless $super_pellets.empty?
       chosen_pellet = $super_pellets.sample
@@ -224,7 +246,7 @@ def random_valid_pos
     y = rand $Height
     x = rand $Width
   end
-  
+
   return Position.new(x, y)
 end
 
@@ -311,6 +333,13 @@ loop do
 
   ############################################################  
   alive_pacs = $pacs.values.select { |p| not p.dead }
+
+  # type actions
+  alive_pacs.each do |pac|
+    act = pac.type_action_or_nil
+    $actions[pac.id] = act unless act.nil?
+  end
+
   alive_pacs.each do |pac|
     $actions[pac.id] = pac.next_action
   end
