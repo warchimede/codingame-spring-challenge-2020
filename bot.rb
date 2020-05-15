@@ -143,7 +143,14 @@ class Pac
         end
       end
       @dest = dest
-      # do not return move to check if stuck
+      
+      if stuck? # do not be stubborn when stuck
+        dest = @pos
+        possible_pos = possible_next_positions @pos
+        dest = possible_pos.sample unless possible_pos.empty?
+        @dest = dest
+      end
+      return move
     end
 
     if stuck?
