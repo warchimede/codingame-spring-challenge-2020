@@ -28,7 +28,7 @@ $Map = map
 $pacs = {}
 $enemies = {}
 $super_pellets = []
-
+$actions = {}
 ####################### Models
 # Position
 class Position
@@ -231,6 +231,7 @@ def random_valid_pos
 end
 
 def reset
+  $actions = {}
   $super_pellets = []
   $enemies = {}
   # consider all pacs are dead
@@ -314,11 +315,10 @@ loop do
     
   # puts "MOVE 0 15 10" # MOVE <pacId> <x> <y>
   ############################################################  
-  action = []
   alive_pacs = $pacs.values.select { |p| not p.dead }
   alive_pacs.each do |pac|
-    action << pac.next_action
+    $actions[pac.id] = pac.next_action
   end
-  puts action.join('|')
+  puts $actions.values.join('|')
   ############################################################
 end
