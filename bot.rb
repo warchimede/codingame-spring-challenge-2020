@@ -213,7 +213,11 @@ def find_love(pacs)
   best_matches = []
   while (best_matches.length != $super_pellets.length) or (matches.length > 0) do
     match = matches.reduce do |best, current|
-      [best.dist, current.dist].min
+      if best.dist < current.dist
+        best
+      else
+        current
+      end
     end
     best_matches << match
     matches = matches.select do |m|
