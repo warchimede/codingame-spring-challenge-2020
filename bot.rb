@@ -15,6 +15,7 @@ $Dead = "DEAD"
 # Map
 $Wall = "#"
 $Space = " "
+$Xplored = "x"
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
@@ -157,7 +158,7 @@ class Pac
     
     # Go see further
     if arrived?
-      @dest = random_valid_pos
+      @dest = closest_unXplored_pos @pos
       log "#{@id} go further #{@dest.x} #{@dest.y}"
     end
 
@@ -272,15 +273,32 @@ def walls_between_x(p1, p2)
   return false
 end
 
-def random_valid_pos
+def random_unXplored_pos
   y = rand $Height
   x = rand $Width
-  while $Map[y][x] == $Wall do
+  while $Map[y][x] == $Wall or $Map[y][x] == $Xplored do
     y = rand $Height
     x = rand $Width
   end
 
   return Position.new(x, y)
+end
+
+def closest_unXplored_pos(pos)
+  result = random_unXplored_pos
+  current_dist = distance result, pos
+  $Map.each_with_index do |line, y|
+    line.each_with_index do |column, x|
+      next if column == $Wall or column == $Xplored
+      position = Position.new(x, y)
+      dist = distance position, pos
+      if dist < current_dist
+        current_dist = dist
+        result = position
+      end
+    end
+  end
+  return result
 end
 
 def available(pacs)
