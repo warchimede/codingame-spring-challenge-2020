@@ -108,30 +108,6 @@ class Pac
       end
   end
 
-  def attribute_super_pellets_or_nil
-    if $super_pellets.empty?
-      return nil
-    end
-
-    chosen_pellet = $super_pellets.sample
-    dest = chosen_pellet.pos
-    current_dist = distance @pos, chosen_pellet.pos
-    $super_pellets.each do |pellet|
-      p_dist = distance @pos, pellet.pos
-      if p_dist < current_dist
-        current_dist = p_dist
-        dest = pellet.pos
-        chosen_pellet = pellet
-      end
-    end
-    @dest = dest
-    $super_pellets.delete(chosen_pellet) # prevents convergence
-
-    log "#{@id} super pellet #{@dest.x} #{@dest.y}"
-
-    return move
-  end
-
   def next_action
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
@@ -394,11 +370,6 @@ loop do
 
   # filter pacs left without action
   available_pacs = available alive_pacs
-
-  # available_pacs.each do |pac|
-  #   act = pac.attribute_super_pellets_or_nil
-  #   $actions[pac.id] = act unless act.nil?
-  # end
   
   find_love available_pacs
 
