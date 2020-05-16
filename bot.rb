@@ -10,6 +10,7 @@ end
 $Rock = "ROCK"
 $Paper = "PAPER"
 $Scissors = "SCISSORS"
+$Dead = "DEAD"
 
 # Map
 $Wall = "#"
@@ -71,6 +72,8 @@ class Pac
       return $Scissors
     when $Scissors
       return $Rock
+    when $Dead
+      return @type
     end
   end
 
