@@ -211,12 +211,11 @@ def find_love(pacs)
   end
 
   best_matches = []
-  while (best_matches.length != $super_pellets.length) or (matches.length > 0) do
-    match = matches.reduce do |best, current|
-      if best.dist < current.dist
-        best
-      else
-        current
+  while (best_matches.length != $super_pellets.length) and (not matches.empty?) do
+    match = matches[0]
+    matches.each do |m|
+      if m.dist < match.dist
+        match = m
       end
     end
     best_matches << match
@@ -226,10 +225,10 @@ def find_love(pacs)
   end
 
   best_matches.each do |bm|
-    pac = $pacs[bm.pac.id] # dunno wether reference or copy so...
-    pac.dest = bm.pellet.pos
-    $pacs[bm.pac.id] = pac
-    $actions[bm.pac.id] = pac.move
+    man = $pacs[bm.pac.id] # dunno wether reference or copy so...
+    man.dest = bm.pellet.pos
+    $pacs[bm.pac.id] = man
+    $actions[bm.pac.id] = man.move
   end
 end
 
