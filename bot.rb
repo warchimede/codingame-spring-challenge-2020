@@ -108,30 +108,6 @@ class Pac
       end
   end
 
-  def attribute_super_pellets_or_nil
-    if $super_pellets.empty?
-      return nil
-    end
-
-    chosen_pellet = $super_pellets.sample
-    dest = chosen_pellet.pos
-    current_dist = distance @pos, chosen_pellet.pos
-    $super_pellets.each do |pellet|
-      p_dist = distance @pos, pellet.pos
-      if p_dist < current_dist
-        current_dist = p_dist
-        dest = pellet.pos
-        chosen_pellet = pellet
-      end
-    end
-    @dest = dest
-    $super_pellets.delete(chosen_pellet) # prevents convergence
-
-    log "#{@id} super pellet #{@dest.x} #{@dest.y}"
-
-    return move
-  end
-
   def next_action
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
@@ -185,6 +161,50 @@ class Pellet
   def initialize(pos, value)
     @pos = pos
     @value = value
+  end
+end
+
+# Tinder match
+class Match
+  attr_accessor :pac, :pellet, :dist
+  def initialize(pac, pellet)
+    @pac = pac
+    @pellet = pellet
+    @dist = distance pac.pos, pellet.pos
+  end
+end
+
+def find_love(pacs)
+  if $super_pellets.empty?
+    return
+  end
+
+  matches = []
+  $super_pellets.each do |pellet|
+    pacs.each do |pac|
+      matches << Match.new(pac, pellet)
+    end
+  end
+
+  best_matches = []
+  while (best_matches.length != $super_pellets.length) and (not matches.empty?) do
+    match = matches[0]
+    matches.each do |m|
+      if m.dist < match.dist
+        match = m
+      end
+    end
+    best_matches << match
+    matches = matches.select do |m|
+      m.pac.id != match.pac.id
+    end
+  end
+
+  best_matches.each do |bm|
+    man = $pacs[bm.pac.id] # dunno wether reference or copy so...
+    man.dest = bm.pellet.pos
+    $pacs[bm.pac.id] = man
+    $actions[bm.pac.id] = man.move
   end
 end
 
@@ -339,7 +359,6 @@ loop do
     end
   end
     
-
   ############################################################  
   alive_pacs = $pacs.values.select { |p| not p.dead }
 
@@ -351,12 +370,9 @@ loop do
 
   # filter pacs left without action
   available_pacs = available alive_pacs
-
-  available_pacs.each do |pac|
-    act = pac.attribute_super_pellets_or_nil
-    $actions[pac.id] = act unless act.nil?
-  end
   
+  find_love available_pacs
+
   # again
   available_pacs = available alive_pacs
 

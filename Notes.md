@@ -1,9 +1,5 @@
 # TODO
-- check avant toute chose si je peux buter un pac
-- switch si enemy me bute ou si son cd est pourrave et je peux le buter
-
-
-- les super pellets choisissent le pac le plus proche?
-- les pacs se bloquent trop
+- calculer les distances entre pac qui switch pas et super pastilles et attribuer en fonction des plus proches
+- au lieu de faire du random quand on est perdu, garder en mémoire toutes les cases explorées et aller dans la case inexplorée la plus proche
 
  
