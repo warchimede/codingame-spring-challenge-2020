@@ -111,6 +111,14 @@ class Pac
       end
   end
 
+  def speed_action_or_nil
+    if @cd != 0
+      return nil
+    end
+
+    return speed
+  end
+
   def next_action
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
@@ -321,6 +329,9 @@ loop do
     ability_cooldown = ability_cooldown.to_i
 
     ############################################################
+    # Mark the positision explored
+    $Map[y][x] = $Xplored
+
     if mine
       if $pacs[pac_id].nil?
         pos = Position.new(x, y)
@@ -374,6 +385,14 @@ loop do
   # filter pacs left without action
   available_pacs = available alive_pacs
   
+  available_pacs.each do |pac|
+    act = pac.speed_action_or_nil
+    $actions[pac.id] = act unless act.nil?
+  end
+
+  # again
+  available_pacs = available alive_pacs
+
   find_love available_pacs
 
   # again
