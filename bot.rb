@@ -58,11 +58,11 @@ class Pac
   end
 
   def arrived?
-    @pos.x == @dest.x and @pos.y == @dest.y
+    (@pos.x == @dest.x and @pos.y == @dest.y) or $Map[@dest.y][@dest.x] == $Xplored
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @stl != 5
   end
 
   def next_type(enemy)
@@ -104,20 +104,12 @@ class Pac
           closest_enemy = enemy
         end
       end
-      if current_dist < 3
+      if current_dist < 5
         type = next_type closest_enemy
         unless type == @type
           return switch type
         end
       end
-  end
-
-  def speed_action_or_nil
-    if @cd != 0
-      return nil
-    end
-
-    return speed
   end
 
   def next_action
@@ -161,6 +153,8 @@ class Pac
       @dest = closest_unXplored_pos @pos
       log "#{@id} go further #{@dest.x} #{@dest.y}"
     end
+
+    return speed if @cd == 0
 
     log "#{@id} advance #{@dest.x} #{@dest.y}"
     return move
@@ -401,14 +395,6 @@ loop do
   end
 
   # filter pacs left without action
-  available_pacs = available alive_pacs
-  
-  available_pacs.each do |pac|
-    act = pac.speed_action_or_nil
-    $actions[pac.id] = act unless act.nil?
-  end
-
-  # again
   available_pacs = available alive_pacs
 
   find_love available_pacs
