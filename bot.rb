@@ -103,7 +103,7 @@ class Pac
           closest_enemy = enemy
         end
       end
-      if current_dist < 5
+      if current_dist < 3 and closest_enemy.cd != 0
         type = next_type closest_enemy
         unless type == @type
           return switch type
