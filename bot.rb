@@ -113,6 +113,8 @@ class Pac
   end
 
   def next_action
+    log @id
+
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
       dest = chosen_pellet.pos
@@ -127,29 +129,40 @@ class Pac
       end
       @dest = dest
       
-      # if @stl > 0
-      #   possible_pos = possible_next_positions @dest
-      #   if possible_pos.length > 1
-      #     possible_pos = possible_pos.select do |pos|
-      #       pos.x != @pos.x and pos.y != @pos.y
-      #     end
-      #   end
-      #   if possible_pos.length > 1
-      #     possible_pos = possible_pos.select do |pos|
-      #       $Map[pos.y][pos.x] != $Xplored
-      #     end
-      #   end
-      #   @dest = possible_pos.sample
-      # end
+      log "#{@dest.x} #{@dest.y}"
+
+      if @stl > 0 and (distance @pos, @dest) == 1
+        possible_pos = possible_next_positions @dest
+
+        log "1 #{possible_pos}"
+
+        if possible_pos.length > 1
+          possible_pos = possible_pos.select do |pos|
+            pos.x != @pos.x and pos.y != @pos.y
+          end
+        end
+
+        log "2 #{possible_pos}"
+
+        if possible_pos.length > 1
+          possible_pos = possible_pos.select do |pos|
+            $Map[pos.y][pos.x] != $Xplored
+          end
+        end
+
+        log "3 #{possible_pos}"
+
+        @dest = possible_pos.sample unless possible_pos.empty?
+      end
 
       if stuck? # do not be stubborn when stuck
         dest = @pos
         possible_pos = possible_next_positions @pos
         dest = possible_pos.sample unless possible_pos.empty?
         @dest = dest
-        log "#{@id} pellet stuck"
+        log "pellet stuck"
       end
-      log "#{@id} pellet #{@dest.x} #{@dest.y}"
+      log "pellet #{@dest.x} #{@dest.y}"
       return move
     end
 
@@ -159,19 +172,19 @@ class Pac
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
 
-      log "#{@id} stuck #{@dest.x} #{@dest.y}"
+      log "stuck #{@dest.x} #{@dest.y}"
       return move
     end
     
     # Go see further
     if arrived?
       @dest = closest_unXplored_pos @pos
-      log "#{@id} go further #{@dest.x} #{@dest.y}"
+      log "go further #{@dest.x} #{@dest.y}"
     end
 
     return speed if @cd == 0
 
-    log "#{@id} advance #{@dest.x} #{@dest.y}"
+    log "advance #{@dest.x} #{@dest.y}"
     return move
   end
 end
