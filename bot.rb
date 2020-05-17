@@ -43,7 +43,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :pellets
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -53,7 +53,6 @@ class Pac
     @dest = pos
     @stl = stl
     @cd = cd
-    @dead = false
     @pellets = []
   end
 
@@ -110,6 +109,7 @@ class Pac
           return switch type
         end
       end
+      return nil
   end
 
   def next_action
@@ -127,6 +127,21 @@ class Pac
       end
       @dest = dest
       
+      # if @stl > 0
+      #   possible_pos = possible_next_positions @dest
+      #   if possible_pos.length > 1
+      #     possible_pos = possible_pos.select do |pos|
+      #       pos.x != @pos.x and pos.y != @pos.y
+      #     end
+      #   end
+      #   if possible_pos.length > 1
+      #     possible_pos = possible_pos.select do |pos|
+      #       $Map[pos.y][pos.x] != $Xplored
+      #     end
+      #   end
+      #   @dest = possible_pos.sample
+      # end
+
       if stuck? # do not be stubborn when stuck
         dest = @pos
         possible_pos = possible_next_positions @pos
@@ -306,14 +321,9 @@ def reset
   $actions = {}
   $super_pellets = []
   $enemies = {}
-  # consider all pacs are dead
-  dead_pacs = {}
   $pacs.each do |id, pac|
     pac.pellets = []
-    pac.dead = true
-    dead_pacs[id] = pac
   end
-  $pacs = dead_pacs
 end
 
 # game loop
@@ -351,11 +361,11 @@ loop do
         $pacs[pac_id] = pac
       else
         pac = $pacs[pac_id]
-        pac.dead = false
         pac.last_pos = Position.new(pac.pos.x, pac.pos.y)
         pac.pos = Position.new(x, y)
         pac.stl = speed_turns_left
         pac.cd = ability_cooldown
+        pac.type = type_id
         $pacs[pac_id] = pac
       end
     else
@@ -386,7 +396,9 @@ loop do
   end
     
   ############################################################  
-  alive_pacs = $pacs.values.select { |p| not p.dead }
+  alive_pacs = $pacs.values.select do |pac|
+    pac.type != $Dead
+  end
 
   # type actions
   alive_pacs.each do |pac|
