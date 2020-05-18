@@ -10,10 +10,12 @@ end
 $Rock = "ROCK"
 $Paper = "PAPER"
 $Scissors = "SCISSORS"
+$Dead = "DEAD"
 
 # Map
 $Wall = "#"
 $Space = " "
+$Xplored = "x"
 # width: size of the grid
 # height: top left corner is (x=0, y=0)
 $Width, $Height = gets.split(" ").collect {|x| x.to_i}
@@ -41,7 +43,7 @@ end
 
 # Pac
 class Pac
-  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :dead, :pellets
+  attr_accessor :id, :type, :mine, :pos, :last_pos, :dest, :stl, :cd, :pellets
   def initialize(id, type, mine, pos, stl, cd)
     @id = id
     @type = type
@@ -51,16 +53,15 @@ class Pac
     @dest = pos
     @stl = stl
     @cd = cd
-    @dead = false
     @pellets = []
   end
 
   def arrived?
-    @pos.x == @dest.x and @pos.y == @dest.y
+    (@pos.x == @dest.x and @pos.y == @dest.y) or $Map[@dest.y][@dest.x] == $Xplored
   end
 
   def stuck?
-    @pos.x == @last_pos.x and @pos.y == @last_pos.y
+    @pos.x == @last_pos.x and @pos.y == @last_pos.y and @stl != 5
   end
 
   def next_type(enemy)
@@ -71,6 +72,8 @@ class Pac
       return $Scissors
     when $Scissors
       return $Rock
+    when $Dead
+      return @type
     end
   end
 
@@ -100,15 +103,18 @@ class Pac
           closest_enemy = enemy
         end
       end
-      if current_dist < 3
+      if current_dist < 3 and closest_enemy.cd != 0
         type = next_type closest_enemy
         unless type == @type
           return switch type
         end
       end
+      return nil
   end
 
   def next_action
+    log @id
+
     unless @pellets.empty?
       chosen_pellet = @pellets[0]
       dest = chosen_pellet.pos
@@ -123,14 +129,40 @@ class Pac
       end
       @dest = dest
       
+      log "#{@dest.x} #{@dest.y}"
+
+      if @stl > 0 and (distance @pos, @dest) == 1
+        possible_pos = possible_next_positions @dest
+
+        log "1 #{possible_pos}"
+
+        if possible_pos.length > 1
+          possible_pos = possible_pos.select do |pos|
+            pos.x != @pos.x and pos.y != @pos.y
+          end
+        end
+
+        log "2 #{possible_pos}"
+
+        if possible_pos.length > 1
+          possible_pos = possible_pos.select do |pos|
+            $Map[pos.y][pos.x] != $Xplored
+          end
+        end
+
+        log "3 #{possible_pos}"
+
+        @dest = possible_pos.sample unless possible_pos.empty?
+      end
+
       if stuck? # do not be stubborn when stuck
         dest = @pos
         possible_pos = possible_next_positions @pos
         dest = possible_pos.sample unless possible_pos.empty?
         @dest = dest
-        log "#{@id} pellet stuck"
+        log "pellet stuck"
       end
-      log "#{@id} pellet #{@dest.x} #{@dest.y}"
+      log "pellet #{@dest.x} #{@dest.y}"
       return move
     end
 
@@ -140,17 +172,19 @@ class Pac
       dest = possible_pos.sample unless possible_pos.empty?
       @dest = dest
 
-      log "#{@id} stuck #{@dest.x} #{@dest.y}"
+      log "stuck #{@dest.x} #{@dest.y}"
       return move
     end
     
     # Go see further
     if arrived?
-      @dest = random_valid_pos
-      log "#{@id} go further #{@dest.x} #{@dest.y}"
+      @dest = closest_unXplored_pos @pos
+      log "go further #{@dest.x} #{@dest.y}"
     end
 
-    log "#{@id} advance #{@dest.x} #{@dest.y}"
+    return speed if @cd == 0
+
+    log "advance #{@dest.x} #{@dest.y}"
     return move
   end
 end
@@ -261,15 +295,32 @@ def walls_between_x(p1, p2)
   return false
 end
 
-def random_valid_pos
+def random_unXplored_pos
   y = rand $Height
   x = rand $Width
-  while $Map[y][x] == $Wall do
+  while $Map[y][x] == $Wall or $Map[y][x] == $Xplored do
     y = rand $Height
     x = rand $Width
   end
 
   return Position.new(x, y)
+end
+
+def closest_unXplored_pos(pos)
+  result = random_unXplored_pos
+  current_dist = distance result, pos
+  $Map.each_with_index do |line, y|
+    line.each_with_index do |column, x|
+      next if column == $Wall or column == $Xplored
+      position = Position.new(x, y)
+      dist = distance position, pos
+      if dist < current_dist
+        current_dist = dist
+        result = position
+      end
+    end
+  end
+  return result
 end
 
 def available(pacs)
@@ -283,14 +334,9 @@ def reset
   $actions = {}
   $super_pellets = []
   $enemies = {}
-  # consider all pacs are dead
-  dead_pacs = {}
   $pacs.each do |id, pac|
     pac.pellets = []
-    pac.dead = true
-    dead_pacs[id] = pac
   end
-  $pacs = dead_pacs
 end
 
 # game loop
@@ -318,6 +364,9 @@ loop do
     ability_cooldown = ability_cooldown.to_i
 
     ############################################################
+    # Mark the positision explored
+    $Map[y][x] = $Xplored
+
     if mine
       if $pacs[pac_id].nil?
         pos = Position.new(x, y)
@@ -325,11 +374,11 @@ loop do
         $pacs[pac_id] = pac
       else
         pac = $pacs[pac_id]
-        pac.dead = false
         pac.last_pos = Position.new(pac.pos.x, pac.pos.y)
         pac.pos = Position.new(x, y)
         pac.stl = speed_turns_left
         pac.cd = ability_cooldown
+        pac.type = type_id
         $pacs[pac_id] = pac
       end
     else
@@ -360,7 +409,9 @@ loop do
   end
     
   ############################################################  
-  alive_pacs = $pacs.values.select { |p| not p.dead }
+  alive_pacs = $pacs.values.select do |pac|
+    pac.type != $Dead
+  end
 
   # type actions
   alive_pacs.each do |pac|
@@ -370,7 +421,7 @@ loop do
 
   # filter pacs left without action
   available_pacs = available alive_pacs
-  
+
   find_love available_pacs
 
   # again
